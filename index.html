@@ -183,18 +183,13 @@
   .item.in-cart{border-color:var(--flame-dim);}
   .featured-badge{
     position:absolute;
-    top:-10px;
-    left:14px;
-    width:34px;
-    height:34px;
-    background:linear-gradient(135deg, #fff8dc 0%, #ffe066 22%, #d4af37 55%, #a9791f 80%, #7a5a15 100%);
-    transform:rotate(45deg);
-    border-radius:7px;
-    box-shadow:
-      0 3px 8px rgba(0,0,0,.5),
-      inset 2px 2px 4px rgba(255,255,255,.65),
-      inset -3px -3px 6px rgba(0,0,0,.35);
+    top:-8px;
+    left:6px;
+    font-size:32px;
+    line-height:1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)) drop-shadow(0 0 8px rgba(255,110,0,.65));
     z-index:2;
+    pointer-events:none;
   }
   .item.sold-out{opacity:.55;}
   .sold-out-badge{
@@ -903,7 +898,7 @@
   .admin-content {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 0;
+    padding: 20px 0.5cm;
   }
   .admin-cat {
     margin-bottom: 20px;
@@ -1807,7 +1802,7 @@ function renderMenu(){
       const imgBlock = imgSrc
         ? `<img class="item-img" src="${imgSrc}" alt="${it.name}" loading="lazy">`
         : (it.imgKey ? `<div class="item-img-skeleton"></div>` : "");
-      const featuredBadge = it.featured ? `<span class="featured-badge" title="Más pedido"></span>` : "";
+      const featuredBadge = it.featured ? `<span class="featured-badge">🔥</span>` : "";
       row.innerHTML = `
         ${featuredBadge}
         ${imgBlock}
@@ -2786,7 +2781,7 @@ function renderAdminPanel() {
           </div>
 
           <div class="admin-soldout-row">
-            <span>💎 Más pedido (muestra una insignia dorada en el plato)</span>
+            <span>🔥 Más pedido (muestra una llama sobre la foto del plato)</span>
             <label class="switch">
               <input type="checkbox" ${item.featured ? 'checked' : ''} onchange="toggleFeatured(${catIdx}, ${itemIdx}, this.checked)">
               <span class="slider"></span>
