@@ -181,14 +181,29 @@
   }
   .item.in-cart{border-color:var(--flame-dim);}
   .item-img{
-    width:132px;
-    height:92px;
+    height:104px;
+    width:auto;
+    max-width:150px;
     border-radius:12px;
     object-fit:contain;
     object-position:center;
     flex-shrink:0;
     border:1px solid var(--line);
     background:var(--card-hi);
+  }
+  .item-img-skeleton{
+    height:104px;
+    width:104px;
+    border-radius:12px;
+    flex-shrink:0;
+    border:1px solid var(--line);
+    background:linear-gradient(100deg, var(--card-hi) 30%, var(--card) 50%, var(--card-hi) 70%);
+    background-size:200% 100%;
+    animation:skeletonShimmer 1.3s ease-in-out infinite;
+  }
+  @keyframes skeletonShimmer{
+    0%{background-position:200% 0;}
+    100%{background-position:-200% 0;}
   }
   .item-info{flex:1; min-width:0;}
   .item-info .name{
@@ -1287,6 +1302,12 @@
           <p style="font-size:11px; color:#ff0055; margin-top:10px; margin-bottom:0;">* Al activar esto, el sitio quedará totalmente inaccesible para todos.</p>
         </div>
       </div>
+
+      <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
+        <span style="font-weight:bold; color:#ff0055;">🗑️ Zona de riesgo</span>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Borra todas las fotos guardadas en la base de datos (todos los productos se quedarán sin foto). Útil para empezar de cero y liberar espacio. Esta acción no se puede deshacer.</p>
+        <button class="btn-small" style="background:#ff0055; color:white; width:100%;" onclick="clearAllStoredImages()">🗑️ Borrar todas las imágenes guardadas</button>
+      </div>
     </div>
   </div>
 
@@ -1580,18 +1601,9 @@ async function loadFromFirestore(){
       if(s.SOCIAL_INSTAGRAM) document.querySelector('.ic-instagram').href = s.SOCIAL_INSTAGRAM;
       if(s.SOCIAL_TIKTOK) document.querySelector('.ic-tiktok').href = s.SOCIAL_TIKTOK;
       if(s.RESTAURANT_NAME) document.title = s.RESTAURANT_NAME + " · Menú";
-
-      const imagesSnap = await db.collection("restaurant_images").get();
-      if(!imagesSnap.empty){
-        for(const key in IMAGES) delete IMAGES[key];
-        imagesSnap.forEach(doc => { IMAGES[doc.id] = doc.data().data; });
-      } else {
-        // the images collection came back empty — this could mean it's genuinely empty,
-        // or it could be a transient read glitch. NEVER auto-overwrite Firestore here:
-        // doing so in the past has wiped out real uploaded photos. Just warn and keep going;
-        // upload photos again from the admin panel if they're really gone.
-        console.warn("La colección de imágenes llegó vacía; no se sobrescribe la base de datos por seguridad.");
-      }
+      // Images are intentionally NOT fetched here — they're loaded separately and in the
+      // background (see loadImagesFromFirestore) so a big images collection never blocks
+      // the menu/prices from showing up quickly.
     } else {
       // first time ever: seed the database with whatever is hardcoded in this file
       await saveToFirestore();
@@ -1601,7 +1613,51 @@ async function loadFromFirestore(){
   }
 }
 
+// Loads product photos separately from the menu/prices, and re-renders once they arrive.
+// Kept apart from loadFromFirestore on purpose: photos are the heaviest part of the database
+// by far, and the menu/prices shouldn't have to wait for every photo to download first.
+async function loadImagesFromFirestore(){
+  try {
+    const imagesSnap = await db.collection("restaurant_images").get();
+    if(!imagesSnap.empty){
+      for(const key in IMAGES) delete IMAGES[key];
+      imagesSnap.forEach(doc => { IMAGES[doc.id] = doc.data().data; });
+    } else {
+      // the images collection came back empty — this could mean it's genuinely empty,
+      // or it could be a transient read glitch. NEVER auto-overwrite Firestore here:
+      // doing so in the past has wiped out real uploaded photos. Just warn and keep going;
+      // upload photos again from the admin panel if they're really gone.
+      console.warn("La colección de imágenes llegó vacía; no se sobrescribe la base de datos por seguridad.");
+    }
+  } catch(e){
+    console.error("No se pudieron cargar las imágenes:", e);
+  }
+}
+
 // --- Save the current menu/settings/images to Firestore so every visitor sees the same data ---
+// Deletes every stored product photo from the database (used to start fresh / free up space).
+// Also clears the imgKey reference on every menu item so nothing points to a deleted photo.
+async function clearAllStoredImages(){
+  if(!confirm("¿Seguro que quieres borrar TODAS las imágenes guardadas en la base de datos? Todos los productos se quedarán sin foto. Esta acción no se puede deshacer.")) return;
+  try {
+    const snap = await db.collection("restaurant_images").get();
+    const batch = db.batch();
+    snap.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    for(const key in IMAGES) delete IMAGES[key];
+    menuData.forEach(cat => cat.items.forEach(it => { delete it.imgKey; }));
+    await saveToFirestore();
+
+    renderAdminPanel();
+    renderMenu();
+    alert("Todas las imágenes se han borrado correctamente.");
+  } catch(e){
+    console.error("No se pudieron borrar las imágenes:", e);
+    alert("Hubo un error al borrar las imágenes. Inténtalo de nuevo.");
+  }
+}
+
 async function saveToFirestore(){
   const settings = {
     IS_OPEN,
@@ -1668,8 +1724,11 @@ function renderMenu(){
       row.className = "item";
       row.id = "row-" + it.id;
       const imgSrc = it.imgKey ? IMAGES[it.imgKey] : null;
+      const imgBlock = imgSrc
+        ? `<img class="item-img" src="${imgSrc}" alt="${it.name}" loading="lazy">`
+        : (it.imgKey ? `<div class="item-img-skeleton"></div>` : "");
       row.innerHTML = `
-        ${imgSrc ? `<img class="item-img" src="${imgSrc}" alt="${it.name}" loading="lazy">` : ""}
+        ${imgBlock}
         <div class="item-info">
           <span class="name">${it.name}</span>
           ${it.desc ? `<div class="desc">${it.desc}</div>` : ""}
@@ -2647,14 +2706,14 @@ function handleImgUpload(event, catIdx, itemIdx) {
       const box = findContentBox(img);
 
       // Resize + compress the cropped region so the subject fills the frame
-      const maxWidth = 700;
+      const maxWidth = 560;
       const scale = Math.min(1, maxWidth / box.w);
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(box.w * scale);
       canvas.height = Math.round(box.h * scale);
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, canvas.width, canvas.height);
-      const compressed = canvas.toDataURL('image/jpeg', 0.72);
+      const compressed = canvas.toDataURL('image/jpeg', 0.66);
 
       const key = 'img_' + Date.now() + '_' + Math.floor(Math.random()*1000);
       IMAGES[key] = compressed;
@@ -2852,6 +2911,26 @@ function closeLogin() {
   document.getElementById("loginOverlay").classList.remove("show");
 }
 
+// Shared by the login form AND by onAuthStateChanged (so a returning admin doesn't
+// have to log in again after a page refresh, since Firebase already remembers them).
+function activateAdminUI(userEmail, opts) {
+  opts = opts || {};
+  IS_DEVELOPER = (userEmail === DEVELOPER_EMAIL);
+  startOrdersListener();
+
+  const adminBtn = document.querySelector(".admin-btn");
+  adminBtn.style.display = "flex";
+  document.getElementById('lockOverlay').classList.remove('show'); // let a logged-in admin/dev reach the panel even while locked
+
+  if (IS_DEVELOPER) {
+    adminBtn.innerHTML = "🛠️";
+    if (opts.showAlert) alert("🚀 MODO DESARROLLADOR ACTIVADO");
+  } else {
+    adminBtn.innerHTML = "⚙️";
+    if (opts.showAlert) alert("✅ Modo administrador activado");
+  }
+}
+
 function checkAdminPassword() {
   const email = document.getElementById("adminEmailInput").value.trim();
   const pass = document.getElementById("adminPassInput").value;
@@ -2865,22 +2944,8 @@ function checkAdminPassword() {
 
   firebase.auth().signInWithEmailAndPassword(email, pass)
     .then((userCredential) => {
-      const userEmail = userCredential.user.email;
-      IS_DEVELOPER = (userEmail === DEVELOPER_EMAIL);
-      startOrdersListener();
-
-      const adminBtn = document.querySelector(".admin-btn");
-      adminBtn.style.display = "flex";
-      document.getElementById('lockOverlay').classList.remove('show'); // let a logged-in admin/dev reach the panel even while locked
+      activateAdminUI(userCredential.user.email, { showAlert: true });
       closeLogin();
-
-      if (IS_DEVELOPER) {
-        adminBtn.innerHTML = "🛠️";
-        alert("🚀 MODO DESARROLLADOR ACTIVADO");
-      } else {
-        adminBtn.innerHTML = "⚙️";
-        alert("✅ Modo administrador activado");
-      }
     })
     .catch((error) => {
       alert("❌ Correo o contraseña incorrectos");
@@ -2888,6 +2953,14 @@ function checkAdminPassword() {
       document.getElementById("adminPassInput").focus();
     });
 }
+
+// Restores admin/developer UI automatically if the browser already has a signed-in
+// Firebase session (e.g. after a page refresh), without showing the welcome alert again.
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    activateAdminUI(user.email, { showAlert: false });
+  }
+});
 
 // Support Enter key in login
 document.getElementById("adminPassInput")?.addEventListener("keyup", function(event) {
@@ -2898,11 +2971,41 @@ document.getElementById("adminPassInput")?.addEventListener("keyup", function(ev
 
 (async function init(){
   updateLogoDisplay(); // show the built-in logo immediately, before the database responds
-  await loadFromFirestore();
+
+  // If Firestore doesn't respond within 15s (bad connection, offline, etc.), stop waiting
+  // and show whatever data is already hardcoded in this file instead of hanging forever.
+  const withTimeout = (promise, ms) => Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => {
+      console.warn("La base de datos tardó demasiado en responder; se muestra el contenido local mientras tanto.");
+      resolve();
+    }, ms))
+  ]);
+
+  const loadPromise = loadFromFirestore();
+  await withTimeout(loadPromise, 15000);
+
   rebuildRegistry();
   renderNav();
   renderMenu();
   updateStatusUI();
+
+  // If the real data from the database arrives late (after the 15s cutoff above), apply it
+  // and re-render automatically — so the site self-corrects instead of staying stuck showing
+  // the old/local content until the customer manually reloads the page.
+  loadPromise.then(() => {
+    rebuildRegistry();
+    renderNav();
+    renderMenu();
+    updateStatusUI();
+  }).catch((e) => console.error("Error cargando datos de la base de datos:", e));
+
+  // Photos load separately and in the background — the menu/prices are already visible above,
+  // so the customer never has to wait for every photo to download before browsing.
+  loadImagesFromFirestore().then(() => {
+    renderMenu();
+  }).catch((e) => console.error("Error cargando imágenes:", e));
+
   // re-check the schedule every minute so the site opens/closes on time without needing a page refresh
   setInterval(() => { if (AUTO_SCHEDULE) updateStatusUI(); }, 60000);
 
