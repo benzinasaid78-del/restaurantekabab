@@ -9,15 +9,15 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Doner Kebab Lahori · Pide online">
 <meta property="og:description" content="Döner, dürum, kebab, hamburguesas y más. Elige tus platos favoritos y recibe tu pedido en casa en pocos minutos.">
-<meta property="og:image" content="https://benzinasaid78-del.github.io/restaurantekabab/og-image.png">
-<meta property="og:url" content="https://benzinasaid78-del.github.io/restaurantekabab/">
+<meta property="og:image" content="https://restaurantekabab.netlify.app/og-image.jpg">
+<meta property="og:url" content="https://restaurantekabab.netlify.app/">
 <meta property="og:locale" content="es_ES">
 
 <!-- Twitter Card (نفس الفكرة لتويتر/إكس) -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Doner Kebab Lahori · Pide online">
 <meta name="twitter:description" content="Döner, dürum, kebab, hamburguesas y más. Recibe tu pedido en casa en pocos minutos.">
-<meta name="twitter:image" content="https://benzinasaid78-del.github.io/restaurantekabab/og-image.png">
+<meta name="twitter:image" content="https://restaurantekabab.netlify.app/og-image.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -178,41 +178,8 @@
     justify-content:space-between;
     gap:12px;
     transition:border-color .15s ease;
-    position:relative;
   }
   .item.in-cart{border-color:var(--flame-dim);}
-  .featured-badge{
-    position:absolute;
-    top:-8px;
-    left:6px;
-    font-size:32px;
-    line-height:1;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)) drop-shadow(0 0 8px rgba(255,110,0,.65));
-    z-index:2;
-    pointer-events:none;
-  }
-  .item.sold-out{opacity:.55;}
-  .sold-out-badge{
-    font-size:12px;
-    font-weight:700;
-    color:var(--flame);
-    border:1px solid var(--flame-dim);
-    border-radius:8px;
-    padding:6px 10px;
-    white-space:nowrap;
-  }
-  .admin-soldout-row{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-top:10px;
-    padding-top:10px;
-    border-top:1px solid var(--line);
-  }
-  .admin-soldout-row span{flex:1 1 200px; min-width:0; font-size:13px; color:var(--muted);}
-  .admin-soldout-row .switch{flex-shrink:0;}
   .item-img{
     height:98px;
     width:140px;
@@ -375,25 +342,6 @@
     margin-bottom:2px;
   }
   .sheet .subhead{color:var(--muted); font-size:12px; margin-bottom:16px;}
-  .subhead-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:16px;
-  }
-  .subhead-row .subhead{margin-bottom:0;}
-  .clear-cart-btn{
-    background:none;
-    border:none;
-    color:var(--muted);
-    font-size:12px;
-    text-decoration:underline;
-    padding:4px 0;
-    cursor:pointer;
-    flex-shrink:0;
-  }
-  .clear-cart-btn:active{color:var(--flame);}
 
   .receipt{
     background:var(--card);
@@ -588,17 +536,6 @@
     margin-top:14px;
     font-size:13px;
     color:var(--muted);
-  }
-  .privacy-note{
-    margin-top:16px;
-    padding-top:16px;
-    border-top:1px solid var(--line);
-    font-size:11.5px;
-    line-height:1.6;
-    color:var(--muted);
-    max-width:480px;
-    margin-left:auto;
-    margin-right:auto;
   }
   /* Admin Panel Styles */
   .admin-btn {
@@ -809,7 +746,7 @@
   }
   .admin-section {
     display: none;
-    padding: 20px 0.5cm;
+    padding: 20px;
   }
   .admin-section.active {
     display: block;
@@ -898,7 +835,7 @@
   .admin-content {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 0;
+    padding: 20px;
   }
   .admin-cat {
     margin-bottom: 20px;
@@ -1143,10 +1080,19 @@
     flex:1; text-align:center; font-size:8.5px; color:var(--muted); font-family:'Space Mono';
   }
   .stats-empty{ color:var(--muted); text-align:center; padding:30px 0; font-size:13px; }
+  .export-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:20px;
+  }
+  .export-card-title{
+    font-family:'Bebas Neue', sans-serif; letter-spacing:0.5px; font-size:19px; color:var(--gold);
+  }
+  .export-card-sub{ font-size:12.5px; color:var(--muted); margin:6px 0 14px; line-height:1.4; }
+  .export-hint{ font-size:12px; color:var(--muted); margin-top:8px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 </head>
 <body>
 
@@ -1207,9 +1153,6 @@
     </a>
   </div>
   <p class="footer-note">Síguenos en nuestras redes para más información</p>
-  <p class="privacy-note">
-    <b>Privacidad:</b> los datos que nos facilitas al hacer un pedido (dirección, teléfono, notas) se usan únicamente para gestionar y entregar ese pedido, y se envían por WhatsApp para su procesamiento. No compartimos tus datos con terceros con fines comerciales. Puedes solicitar en cualquier momento el acceso, la rectificación o la eliminación de tus datos contactándonos por WhatsApp.
-  </p>
 </footer>
 
 
@@ -1253,6 +1196,17 @@
 
     <!-- Statistics Section -->
     <div id="tab-stats" class="admin-section">
+      <div class="export-card">
+        <div class="export-card-title">📥 Exportar pedidos a Excel</div>
+        <div class="export-card-sub">Descarga un archivo .xlsx con el detalle de cada pedido y de cada producto vendido, listo para la contabilidad.</div>
+        <div class="stats-range-row">
+          <button class="stats-range-btn" onclick="exportOrdersToExcel('today')">Hoy</button>
+          <button class="stats-range-btn" onclick="exportOrdersToExcel('week')">7 días</button>
+          <button class="stats-range-btn" onclick="exportOrdersToExcel('month')">30 días</button>
+          <button class="stats-range-btn" onclick="exportOrdersToExcel('all')">Todo</button>
+        </div>
+        <div class="export-hint" id="exportStatusHint" style="display:none;"></div>
+      </div>
       <div class="stats-range-row" id="statsRangeRow">
         <button class="stats-range-btn" data-range="today" onclick="setStatsRange('today')">Hoy</button>
         <button class="stats-range-btn" data-range="week" onclick="setStatsRange('week')">7 días</button>
@@ -1419,10 +1373,7 @@
     <button class="close-btn" onclick="closeSheet()">✕</button>
     <div class="sheet-handle"></div>
     <h3 class="display">Tu pedido</h3>
-    <div class="subhead-row">
-      <div class="subhead">Revisa antes de enviar</div>
-      <button class="clear-cart-btn" onclick="clearCart()">🗑️ Vaciar carrito</button>
-    </div>
+    <div class="subhead">Revisa antes de enviar</div>
 
     <div class="receipt" id="receipt"></div>
 
@@ -1796,15 +1747,13 @@ function renderMenu(){
     
     g.items.forEach(it => {
       const row = document.createElement("div");
-      row.className = "item" + (it.soldOut ? " sold-out" : "");
+      row.className = "item";
       row.id = "row-" + it.id;
       const imgSrc = it.imgKey ? IMAGES[it.imgKey] : null;
       const imgBlock = imgSrc
         ? `<img class="item-img" src="${imgSrc}" alt="${it.name}" loading="lazy">`
         : (it.imgKey ? `<div class="item-img-skeleton"></div>` : "");
-      const featuredBadge = it.featured ? `<span class="featured-badge">🔥</span>` : "";
       row.innerHTML = `
-        ${featuredBadge}
         ${imgBlock}
         <div class="item-info">
           <span class="name">${it.name}</span>
@@ -1823,26 +1772,6 @@ function renderMenu(){
 
 function renderControl(it){
   const el = document.getElementById("ctrl-" + it.id);
-  if (!el) return;
-
-  // Store closed: just show the dish (name/photo/price already in the row) with no
-  // way to add it to the cart — no +, no stepper, no variant button.
-  if (!isStoreOpen()){
-    el.innerHTML = "";
-    const row = document.getElementById("row-" + it.id);
-    if (row) row.classList.remove("in-cart");
-    return;
-  }
-
-  // Sold out today: dish stays visible in the menu, but there's no way to add it —
-  // toggled instantly from the admin panel, independent of the store open/closed state.
-  if (it.soldOut){
-    el.innerHTML = `<span class="sold-out-badge">Agotado hoy</span>`;
-    const row = document.getElementById("row-" + it.id);
-    if (row) row.classList.remove("in-cart");
-    return;
-  }
-
   if(it.variants){
     const total = it.variants.reduce((s,v) => s + (cart[v.id] || 0), 0);
     if(total === 0){
@@ -2033,15 +1962,6 @@ function openSheet(){
 }
 function closeSheet(){
   document.getElementById("overlay").classList.remove("show");
-}
-
-// Resets every item/variant quantity back to 0 in one tap, instead of the person having
-// to press "−" repeatedly on each item they'd selected.
-function clearCart(){
-  cart = {};
-  renderReceipt();
-  updateCartBar();
-  menuData.forEach(g => g.items.forEach(it => renderControl(it)));
 }
 
 // Atomically gets the next order number from the database (keeps counting even across
@@ -2282,19 +2202,11 @@ function computeAutoOpenState() {
   }
 }
 
-// Single source of truth for "can the customer actually order right now?" — used both to
-// show/hide the closed banner AND to decide whether the +/- add-to-cart controls render at
-// all, so browsing while closed never lets someone sneak an order into the cart.
-function isStoreOpen(){
-  if (IS_LOCKED) return false;
-  return AUTO_SCHEDULE ? computeAutoOpenState() : IS_OPEN;
-}
-
 function updateStatusUI() {
   const notice = document.getElementById('closedNotice');
   const cartBar = document.getElementById('cartBar');
   const lock = document.getElementById('lockOverlay');
-
+  
   if (IS_LOCKED) {
     lock.classList.add('show');
     return;
@@ -2302,7 +2214,7 @@ function updateStatusUI() {
     lock.classList.remove('show');
   }
 
-  const effectiveOpen = isStoreOpen();
+  const effectiveOpen = AUTO_SCHEDULE ? computeAutoOpenState() : IS_OPEN;
 
   if (!effectiveOpen) {
     notice.classList.add('show');
@@ -2311,10 +2223,6 @@ function updateStatusUI() {
     notice.classList.remove('show');
     updateCartBar();
   }
-
-  // Refresh every item's +/- control so it matches the current open/closed state
-  // (covers: admin just toggled it, or the auto-schedule flipped it in the background).
-  menuData.forEach(g => g.items.forEach(it => renderControl(it)));
 }
 
 function toggleAdmin() {
@@ -2487,35 +2395,6 @@ async function toggleOrderDone(orderId, completed, checkboxEl){
   }
 }
 
-// Marks/unmarks a dish as "most ordered" — shows a small golden diamond badge on the
-// item so customers notice it, purely a marketing nudge (doesn't affect price or ordering).
-async function toggleFeatured(catIdx, itemIdx, featured){
-  const item = menuData[catIdx].items[itemIdx];
-  item.featured = featured;
-  try {
-    await saveToFirestore();
-  } catch(e){
-    console.error("No se pudo guardar el estado de destacado:", e);
-    item.featured = !featured; // revert on failure
-  }
-  renderMenu();
-}
-
-// Marks/unmarks a dish as sold out for today. Saves instantly (doesn't wait for the admin
-// to press "Guardar Cambios") so it can be flipped quickly during a busy shift, and updates
-// the live menu right away so customers stop seeing an "add" button for it.
-async function toggleSoldOut(catIdx, itemIdx, soldOut){
-  const item = menuData[catIdx].items[itemIdx];
-  item.soldOut = soldOut;
-  try {
-    await saveToFirestore();
-  } catch(e){
-    console.error("No se pudo guardar el estado de agotado:", e);
-    item.soldOut = !soldOut; // revert on failure
-  }
-  renderMenu();
-}
-
 // --- Statistics dashboard ---
 let currentStatsRange = "today";
 
@@ -2533,6 +2412,123 @@ function statsRangeBounds(range){
     return null; // "all" = no lower bound
   }
   return start;
+}
+
+async function exportOrdersToExcel(range){
+  const hint = document.getElementById('exportStatusHint');
+  hint.style.display = 'block';
+  hint.textContent = 'Generando archivo…';
+  try {
+    const start = statsRangeBounds(range);
+    let query = db.collection("orders").orderBy("createdAt", "desc");
+    if (start) query = query.where("createdAt", ">=", start);
+    query = query.limit(5000); // generous cap for a single shop; raise if order volume ever grows a lot
+    const snap = await query.get();
+    const orders = [];
+    snap.forEach(doc => orders.push(doc.data()));
+
+    if (orders.length === 0){
+      hint.textContent = 'No hay pedidos en este período.';
+      setTimeout(() => { hint.style.display = 'none'; }, 2500);
+      return;
+    }
+    orders.reverse(); // oldest first, easier to read top-to-bottom
+
+    const HEADER_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD64933' } };
+    const HEADER_FONT = { bold: true, color: { argb: 'FFF5EFE6' } };
+    const TOTALS_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3A857' } };
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Lahori Kebab";
+    workbook.created = new Date();
+
+    // ---- Sheet 1: one row per order (for a quick accounting overview) ----
+    const sheet1 = workbook.addWorksheet('Pedidos');
+    sheet1.columns = [
+      { header: 'Nº Pedido', key: 'num', width: 10 },
+      { header: 'Fecha', key: 'date', width: 12 },
+      { header: 'Hora', key: 'time', width: 8 },
+      { header: 'Teléfono', key: 'phone', width: 15 },
+      { header: 'Dirección', key: 'addr', width: 34 },
+      { header: 'Productos', key: 'items', width: 48 },
+      { header: 'Notas', key: 'notes', width: 22 },
+      { header: 'Estado', key: 'status', width: 12 },
+      { header: 'Total (€)', key: 'total', width: 12 },
+    ];
+    sheet1.getRow(1).eachCell(cell => { cell.font = HEADER_FONT; cell.fill = HEADER_FILL; cell.alignment = { vertical: 'middle' }; });
+    sheet1.getRow(1).height = 20;
+    sheet1.views = [{ state: 'frozen', ySplit: 1 }];
+
+    orders.forEach(o => {
+      const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : null;
+      const itemsSummary = (o.items || []).map(it => `${it.qty}x ${it.name}`).join(', ');
+      const row = sheet1.addRow({
+        num: o.orderNumber || '',
+        date: d ? d.toLocaleDateString('es-ES') : '',
+        time: d ? d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}) : '',
+        phone: o.phone || '',
+        addr: o.address || '',
+        items: itemsSummary,
+        notes: o.notes || '',
+        status: o.completed ? 'Completado' : 'Pendiente',
+        total: o.total || 0,
+      });
+      row.getCell('total').numFmt = '#,##0.00 "€"';
+    });
+
+    const totalRevenue = orders.reduce((s,o) => s + (o.total || 0), 0);
+    const totalsRow = sheet1.addRow({ status: `TOTAL (${orders.length} pedidos)`, total: totalRevenue });
+    totalsRow.eachCell(cell => { cell.font = { bold: true }; cell.fill = TOTALS_FILL; });
+    totalsRow.getCell('total').numFmt = '#,##0.00 "€"';
+
+    // ---- Sheet 2: one row per product sold (for product-level accounting) ----
+    const sheet2 = workbook.addWorksheet('Detalle productos');
+    sheet2.columns = [
+      { header: 'Nº Pedido', key: 'num', width: 10 },
+      { header: 'Fecha', key: 'date', width: 12 },
+      { header: 'Producto', key: 'name', width: 36 },
+      { header: 'Cantidad', key: 'qty', width: 10 },
+      { header: 'Precio unidad (€)', key: 'price', width: 17 },
+      { header: 'Subtotal (€)', key: 'subtotal', width: 14 },
+    ];
+    sheet2.getRow(1).eachCell(cell => { cell.font = HEADER_FONT; cell.fill = HEADER_FILL; cell.alignment = { vertical: 'middle' }; });
+    sheet2.getRow(1).height = 20;
+    sheet2.views = [{ state: 'frozen', ySplit: 1 }];
+
+    orders.forEach(o => {
+      const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : null;
+      (o.items || []).forEach(it => {
+        const row = sheet2.addRow({
+          num: o.orderNumber || '',
+          date: d ? d.toLocaleDateString('es-ES') : '',
+          name: it.name,
+          qty: it.qty,
+          price: it.price,
+          subtotal: it.qty * it.price,
+        });
+        row.getCell('price').numFmt = '#,##0.00 "€"';
+        row.getCell('subtotal').numFmt = '#,##0.00 "€"';
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const rangeLabel = {today:'hoy', week:'7dias', month:'30dias', all:'todo'}[range];
+    a.href = url;
+    a.download = `pedidos_${rangeLabel}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    hint.textContent = `✅ Exportados ${orders.length} pedidos.`;
+    setTimeout(() => { hint.style.display = 'none'; }, 3000);
+  } catch(e){
+    console.error("Error exportando pedidos:", e);
+    hint.textContent = 'No se pudo generar el archivo. Inténtalo de nuevo.';
+  }
 }
 
 function setStatsRange(range){
@@ -2778,22 +2774,6 @@ function renderAdminPanel() {
               <input type="file" hidden accept="image/*" onchange="handleImgUpload(event, ${catIdx}, ${itemIdx})">
             </label>
             ${imgSrc ? `<button class="btn-icon" onclick="removeImg(${catIdx}, ${itemIdx})">✕</button>` : ''}
-          </div>
-
-          <div class="admin-soldout-row">
-            <span>🔥 Más pedido (muestra una llama sobre la foto del plato)</span>
-            <label class="switch">
-              <input type="checkbox" ${item.featured ? 'checked' : ''} onchange="toggleFeatured(${catIdx}, ${itemIdx}, this.checked)">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="admin-soldout-row">
-            <span>🚫 Agotado hoy (se oculta el botón de añadir, pero el plato sigue visible)</span>
-            <label class="switch">
-              <input type="checkbox" ${item.soldOut ? 'checked' : ''} onchange="toggleSoldOut(${catIdx}, ${itemIdx}, this.checked)">
-              <span class="slider"></span>
-            </label>
           </div>
 
           <div class="admin-item-actions">
