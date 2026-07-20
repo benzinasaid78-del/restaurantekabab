@@ -180,6 +180,26 @@
     transition:border-color .15s ease;
   }
   .item.in-cart{border-color:var(--flame-dim);}
+  .item.sold-out{opacity:.55;}
+  .sold-out-badge{
+    font-size:12px;
+    font-weight:700;
+    color:var(--flame);
+    border:1px solid var(--flame-dim);
+    border-radius:8px;
+    padding:6px 10px;
+    white-space:nowrap;
+  }
+  .admin-soldout-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  .admin-soldout-row span{font-size:13px; color:var(--muted);}
   .item-img{
     height:98px;
     width:140px;
@@ -1741,7 +1761,7 @@ function renderMenu(){
     
     g.items.forEach(it => {
       const row = document.createElement("div");
-      row.className = "item";
+      row.className = "item" + (it.soldOut ? " sold-out" : "");
       row.id = "row-" + it.id;
       const imgSrc = it.imgKey ? IMAGES[it.imgKey] : null;
       const imgBlock = imgSrc
@@ -1772,6 +1792,15 @@ function renderControl(it){
   // way to add it to the cart — no +, no stepper, no variant button.
   if (!isStoreOpen()){
     el.innerHTML = "";
+    const row = document.getElementById("row-" + it.id);
+    if (row) row.classList.remove("in-cart");
+    return;
+  }
+
+  // Sold out today: dish stays visible in the menu, but there's no way to add it —
+  // toggled instantly from the admin panel, independent of the store open/closed state.
+  if (it.soldOut){
+    el.innerHTML = `<span class="sold-out-badge">Agotado hoy</span>`;
     const row = document.getElementById("row-" + it.id);
     if (row) row.classList.remove("in-cart");
     return;
@@ -2412,6 +2441,21 @@ async function toggleOrderDone(orderId, completed, checkboxEl){
   }
 }
 
+// Marks/unmarks a dish as sold out for today. Saves instantly (doesn't wait for the admin
+// to press "Guardar Cambios") so it can be flipped quickly during a busy shift, and updates
+// the live menu right away so customers stop seeing an "add" button for it.
+async function toggleSoldOut(catIdx, itemIdx, soldOut){
+  const item = menuData[catIdx].items[itemIdx];
+  item.soldOut = soldOut;
+  try {
+    await saveToFirestore();
+  } catch(e){
+    console.error("No se pudo guardar el estado de agotado:", e);
+    item.soldOut = !soldOut; // revert on failure
+  }
+  renderMenu();
+}
+
 // --- Statistics dashboard ---
 let currentStatsRange = "today";
 
@@ -2674,6 +2718,14 @@ function renderAdminPanel() {
               <input type="file" hidden accept="image/*" onchange="handleImgUpload(event, ${catIdx}, ${itemIdx})">
             </label>
             ${imgSrc ? `<button class="btn-icon" onclick="removeImg(${catIdx}, ${itemIdx})">✕</button>` : ''}
+          </div>
+
+          <div class="admin-soldout-row">
+            <span>🚫 Agotado hoy (se oculta el botón de añadir, pero el plato sigue visible)</span>
+            <label class="switch">
+              <input type="checkbox" ${item.soldOut ? 'checked' : ''} onchange="toggleSoldOut(${catIdx}, ${itemIdx}, this.checked)">
+              <span class="slider"></span>
+            </label>
           </div>
 
           <div class="admin-item-actions">
