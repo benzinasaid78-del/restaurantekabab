@@ -364,6 +364,25 @@
     margin-bottom:2px;
   }
   .sheet .subhead{color:var(--muted); font-size:12px; margin-bottom:16px;}
+  .subhead-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .subhead-row .subhead{margin-bottom:0;}
+  .clear-cart-btn{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:12px;
+    text-decoration:underline;
+    padding:4px 0;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .clear-cart-btn:active{color:var(--flame);}
 
   .receipt{
     background:var(--card);
@@ -1389,7 +1408,10 @@
     <button class="close-btn" onclick="closeSheet()">✕</button>
     <div class="sheet-handle"></div>
     <h3 class="display">Tu pedido</h3>
-    <div class="subhead">Revisa antes de enviar</div>
+    <div class="subhead-row">
+      <div class="subhead">Revisa antes de enviar</div>
+      <button class="clear-cart-btn" onclick="clearCart()">🗑️ Vaciar carrito</button>
+    </div>
 
     <div class="receipt" id="receipt"></div>
 
@@ -1998,6 +2020,15 @@ function openSheet(){
 }
 function closeSheet(){
   document.getElementById("overlay").classList.remove("show");
+}
+
+// Resets every item/variant quantity back to 0 in one tap, instead of the person having
+// to press "−" repeatedly on each item they'd selected.
+function clearCart(){
+  cart = {};
+  renderReceipt();
+  updateCartBar();
+  menuData.forEach(g => g.items.forEach(it => renderControl(it)));
 }
 
 // Atomically gets the next order number from the database (keeps counting even across
