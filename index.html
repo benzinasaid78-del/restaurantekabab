@@ -192,6 +192,7 @@
   }
   .admin-soldout-row{
     display:flex;
+    flex-wrap:wrap;
     align-items:center;
     justify-content:space-between;
     gap:10px;
@@ -199,7 +200,8 @@
     padding-top:10px;
     border-top:1px solid var(--line);
   }
-  .admin-soldout-row span{font-size:13px; color:var(--muted);}
+  .admin-soldout-row span{flex:1 1 200px; min-width:0; font-size:13px; color:var(--muted);}
+  .admin-soldout-row .switch{flex-shrink:0;}
   .item-img{
     height:98px;
     width:140px;
