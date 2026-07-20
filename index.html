@@ -1275,6 +1275,12 @@
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
+        <label style="margin-top:0;">🔑 Clave API de ImgBB (para fotos rápidas)</label>
+        <input type="text" id="set-imgbb-key" value="" placeholder="Pega aquí tu clave de api.imgbb.com">
+        <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Las fotos que subas desde el panel se guardan en ImgBB (rápido) en vez de en Firestore (lento). Si se deja vacío, se guardan en Firestore como antes.</p>
+      </div>
+
+      <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
         <label style="margin-top:0;">🖼️ Logo del restaurante</label>
         <div class="img-preview-container">
           <img src="" class="img-preview-mini" id="logoPreview" style="display:none;">
@@ -1430,6 +1436,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let WHATSAPP_NUMBER = "34641821406"; // TEST NUMBER - CHANGE ONLY AT FINAL DEPLOYMENT
+let IMGBB_API_KEY = "a788a2bbbc7beea20efff1303259e807"; // used to host admin-uploaded product photos instead of bloating Firestore; editable from the developer panel
 
 // The 15 original menu photos are served as static files (fast, cached, free — no Firestore needed).
 // Any NEW photo an admin uploads later through the panel still gets its own key and is stored/loaded
@@ -1595,6 +1602,7 @@ async function loadFromFirestore(){
       if(s.WHATSAPP_NUMBER) WHATSAPP_NUMBER = s.WHATSAPP_NUMBER;
       if(typeof s.RESTAURANT_LOGO === "string") RESTAURANT_LOGO = s.RESTAURANT_LOGO;
       if(typeof s.RESTAURANT_EYEBROW === "string") RESTAURANT_EYEBROW = s.RESTAURANT_EYEBROW;
+      if(typeof s.IMGBB_API_KEY === "string") IMGBB_API_KEY = s.IMGBB_API_KEY;
       updateLogoDisplay();
       updateEyebrowDisplay();
       if(s.RESTAURANT_NAME) document.getElementById('mainTitle').innerHTML = s.RESTAURANT_NAME.replace(' ', ' <span>') + '</span>';
@@ -1668,6 +1676,7 @@ async function saveToFirestore(){
     WHATSAPP_NUMBER,
     RESTAURANT_LOGO,
     RESTAURANT_EYEBROW,
+    IMGBB_API_KEY,
     RESTAURANT_NAME: document.getElementById('mainTitle').innerText,
     RESTAURANT_SUB: document.querySelector('p.sub').innerText,
     MAPS_URL: document.querySelector('.location-link').getAttribute('href'),
@@ -2538,6 +2547,7 @@ function loadSettings() {
   document.getElementById('set-min-order').value = MIN_ORDER_AMOUNT;
   toggleAutoScheduleUI();
   document.getElementById('set-eyebrow-text').value = RESTAURANT_EYEBROW;
+  document.getElementById('set-imgbb-key').value = IMGBB_API_KEY;
   document.getElementById('set-fb-url').value = document.querySelector('.ic-facebook').href;
   document.getElementById('set-ig-url').value = document.querySelector('.ic-instagram').href;
   document.getElementById('set-tt-url').value = document.querySelector('.ic-tiktok').href;
@@ -2699,7 +2709,7 @@ function handleImgUpload(event, catIdx, itemIdx) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
-    img.onload = function(){
+    img.onload = async function(){
       const box = findContentBox(img);
 
       // Resize + compress the cropped region so the subject fills the frame
@@ -2713,9 +2723,35 @@ function handleImgUpload(event, catIdx, itemIdx) {
       const compressed = canvas.toDataURL('image/jpeg', 0.66);
 
       const key = 'img_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+
+      // Show the photo immediately (local preview) while it uploads in the background.
       IMAGES[key] = compressed;
       menuData[catIdx].items[itemIdx].imgKey = key;
       renderAdminPanel();
+
+      // Host the photo on ImgBB so it loads fast for every visitor (instead of storing the
+      // full photo in Firestore, which is slow). If this fails for any reason (no key set,
+      // offline, ImgBB down), the local compressed copy from above just stays as-is — nothing breaks.
+      if (IMGBB_API_KEY) {
+        try {
+          const base64Data = compressed.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data && data.success && data.data && data.data.url) {
+            IMAGES[key] = data.data.url;
+            renderAdminPanel();
+          } else {
+            console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+          }
+        } catch(err) {
+          console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
+        }
+      }
     };
     img.src = e.target.result;
   };
@@ -2824,6 +2860,7 @@ async function saveAndDownload() {
   DELIVERY_MAX_MINUTES = parseInt(document.getElementById('set-delivery-max').value) || 45;
   MIN_ORDER_AMOUNT = parseFloat(document.getElementById('set-min-order').value) || 0;
   RESTAURANT_EYEBROW = document.getElementById('set-eyebrow-text').value;
+  IMGBB_API_KEY = document.getElementById('set-imgbb-key').value;
   document.querySelector('.ic-facebook').href = document.getElementById('set-fb-url').value;
   document.querySelector('.ic-instagram').href = document.getElementById('set-ig-url').value;
   document.querySelector('.ic-tiktok').href = document.getElementById('set-tt-url').value;
