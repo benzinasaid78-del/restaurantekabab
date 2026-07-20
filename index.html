@@ -185,11 +185,11 @@
     width:140px;
     max-width:140px;
     border-radius:12px;
-    object-fit:cover;
+    object-fit:contain;
     object-position:center;
     flex-shrink:0;
     border:1px solid var(--line);
-    background:var(--card-hi);
+    background:#fff;
   }
   .item-img-skeleton{
     height:98px;
@@ -1431,7 +1431,26 @@ const db = firebase.firestore();
 
 let WHATSAPP_NUMBER = "34641821406"; // TEST NUMBER - CHANGE ONLY AT FINAL DEPLOYMENT
 
-const IMAGES = {}; // product photos now live entirely in Firestore (restaurant_images collection), loaded at runtime;
+// The 15 original menu photos are served as static files (fast, cached, free — no Firestore needed).
+// Any NEW photo an admin uploads later through the panel still gets its own key and is stored/loaded
+// from Firestore as before, so this doesn't break future uploads.
+const IMAGES = {
+  durum: "durum.jpg",
+  kebabmix: "kebabmix.jpg",
+  hamburguesa: "hamburguesa.jpg",
+  menufamiliar: "menufamiliar.jpg",
+  muslospollo: "muslospollo.jpg",
+  platocombinado: "platocombinado.jpg",
+  platocombinado_nuggets: "platocombinado_nuggets.jpg",
+  boxkebab: "boxkebab.jpg",
+  hotdog: "hotdog.jpg",
+  nachos: "nachos.jpg",
+  palomitas: "palomitas.jpg",
+  mediopollo: "mediopollo.jpg",
+  bocadillo: "bocadillo.jpg",
+  polloast: "polloast.jpg",
+  platoprice: "platoprice.jpg"
+};
 
 const menuData = [
   { cat:"Menús", items:[
@@ -1603,16 +1622,10 @@ async function loadFromFirestore(){
 async function loadImagesFromFirestore(){
   try {
     const imagesSnap = await db.collection("restaurant_images").get();
-    if(!imagesSnap.empty){
-      for(const key in IMAGES) delete IMAGES[key];
-      imagesSnap.forEach(doc => { IMAGES[doc.id] = doc.data().data; });
-    } else {
-      // the images collection came back empty — this could mean it's genuinely empty,
-      // or it could be a transient read glitch. NEVER auto-overwrite Firestore here:
-      // doing so in the past has wiped out real uploaded photos. Just warn and keep going;
-      // upload photos again from the admin panel if they're really gone.
-      console.warn("La colección de imágenes llegó vacía; no se sobrescribe la base de datos por seguridad.");
-    }
+    // Merge only — never delete first. The 15 baseline photos are local static files (see IMAGES
+    // above) and must stay untouched; only new admin-uploaded photos (their own unique keys) come
+    // from Firestore and get added/overwritten here.
+    imagesSnap.forEach(doc => { IMAGES[doc.id] = doc.data().data; });
   } catch(e){
     console.error("No se pudieron cargar las imágenes:", e);
   }
