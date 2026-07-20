@@ -178,8 +178,29 @@
     justify-content:space-between;
     gap:12px;
     transition:border-color .15s ease;
+    position:relative;
   }
   .item.in-cart{border-color:var(--flame-dim);}
+  .featured-badge{
+    position:absolute;
+    top:-8px;
+    left:14px;
+    width:26px;
+    height:26px;
+    background:linear-gradient(135deg, #fff3b0, #d4af37 45%, #8a6d1f);
+    transform:rotate(45deg);
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.35);
+    z-index:2;
+  }
+  .featured-badge span{
+    transform:rotate(-45deg);
+    font-size:12px;
+    line-height:1;
+  }
   .item.sold-out{opacity:.55;}
   .sold-out-badge{
     font-size:12px;
@@ -1791,7 +1812,9 @@ function renderMenu(){
       const imgBlock = imgSrc
         ? `<img class="item-img" src="${imgSrc}" alt="${it.name}" loading="lazy">`
         : (it.imgKey ? `<div class="item-img-skeleton"></div>` : "");
+      const featuredBadge = it.featured ? `<span class="featured-badge" title="Más pedido"><span>💎</span></span>` : "";
       row.innerHTML = `
+        ${featuredBadge}
         ${imgBlock}
         <div class="item-info">
           <span class="name">${it.name}</span>
@@ -2474,6 +2497,20 @@ async function toggleOrderDone(orderId, completed, checkboxEl){
   }
 }
 
+// Marks/unmarks a dish as "most ordered" — shows a small golden diamond badge on the
+// item so customers notice it, purely a marketing nudge (doesn't affect price or ordering).
+async function toggleFeatured(catIdx, itemIdx, featured){
+  const item = menuData[catIdx].items[itemIdx];
+  item.featured = featured;
+  try {
+    await saveToFirestore();
+  } catch(e){
+    console.error("No se pudo guardar el estado de destacado:", e);
+    item.featured = !featured; // revert on failure
+  }
+  renderMenu();
+}
+
 // Marks/unmarks a dish as sold out for today. Saves instantly (doesn't wait for the admin
 // to press "Guardar Cambios") so it can be flipped quickly during a busy shift, and updates
 // the live menu right away so customers stop seeing an "add" button for it.
@@ -2751,6 +2788,14 @@ function renderAdminPanel() {
               <input type="file" hidden accept="image/*" onchange="handleImgUpload(event, ${catIdx}, ${itemIdx})">
             </label>
             ${imgSrc ? `<button class="btn-icon" onclick="removeImg(${catIdx}, ${itemIdx})">✕</button>` : ''}
+          </div>
+
+          <div class="admin-soldout-row">
+            <span>💎 Más pedido (muestra una insignia dorada en el plato)</span>
+            <label class="switch">
+              <input type="checkbox" ${item.featured ? 'checked' : ''} onchange="toggleFeatured(${catIdx}, ${itemIdx}, this.checked)">
+              <span class="slider"></span>
+            </label>
           </div>
 
           <div class="admin-soldout-row">
