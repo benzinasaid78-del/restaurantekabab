@@ -1752,6 +1752,17 @@ function renderMenu(){
 
 function renderControl(it){
   const el = document.getElementById("ctrl-" + it.id);
+  if (!el) return;
+
+  // Store closed: just show the dish (name/photo/price already in the row) with no
+  // way to add it to the cart — no +, no stepper, no variant button.
+  if (!isStoreOpen()){
+    el.innerHTML = "";
+    const row = document.getElementById("row-" + it.id);
+    if (row) row.classList.remove("in-cart");
+    return;
+  }
+
   if(it.variants){
     const total = it.variants.reduce((s,v) => s + (cart[v.id] || 0), 0);
     if(total === 0){
@@ -2182,11 +2193,19 @@ function computeAutoOpenState() {
   }
 }
 
+// Single source of truth for "can the customer actually order right now?" — used both to
+// show/hide the closed banner AND to decide whether the +/- add-to-cart controls render at
+// all, so browsing while closed never lets someone sneak an order into the cart.
+function isStoreOpen(){
+  if (IS_LOCKED) return false;
+  return AUTO_SCHEDULE ? computeAutoOpenState() : IS_OPEN;
+}
+
 function updateStatusUI() {
   const notice = document.getElementById('closedNotice');
   const cartBar = document.getElementById('cartBar');
   const lock = document.getElementById('lockOverlay');
-  
+
   if (IS_LOCKED) {
     lock.classList.add('show');
     return;
@@ -2194,7 +2213,7 @@ function updateStatusUI() {
     lock.classList.remove('show');
   }
 
-  const effectiveOpen = AUTO_SCHEDULE ? computeAutoOpenState() : IS_OPEN;
+  const effectiveOpen = isStoreOpen();
 
   if (!effectiveOpen) {
     notice.classList.add('show');
@@ -2203,6 +2222,10 @@ function updateStatusUI() {
     notice.classList.remove('show');
     updateCartBar();
   }
+
+  // Refresh every item's +/- control so it matches the current open/closed state
+  // (covers: admin just toggled it, or the auto-schedule flipped it in the background).
+  menuData.forEach(g => g.items.forEach(it => renderControl(it)));
 }
 
 function toggleAdmin() {
