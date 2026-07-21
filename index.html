@@ -1031,39 +1031,48 @@
   /* Initial loading screen (shown until the menu/data is ready) */
   .loading-screen{
     position:fixed; inset:0; z-index:5000;
-    background:
-      radial-gradient(circle at 50% 30%, rgba(214,73,51,0.18), transparent 60%),
-      var(--bg);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:22px;
+    background:var(--bg);
+    display:flex; align-items:flex-end; justify-content:center;
+    overflow:hidden;
     transition:opacity .5s ease, visibility .5s ease;
   }
   .loading-screen.hide{ opacity:0; visibility:hidden; pointer-events:none; }
-  .loading-ring{
-    width:58px; height:58px;
-    border-radius:50%;
-    border:4px solid var(--line);
-    border-top-color:var(--flame);
-    border-right-color:var(--gold);
-    animation:loadingSpin .85s linear infinite;
+  .loading-bg-img{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center; z-index:0;
+    display:none; /* shown via JS once a custom image is loaded from the database */
   }
-  @keyframes loadingSpin{ to{ transform:rotate(360deg); } }
-  .loading-brand{
-    font-family:'Bebas Neue', sans-serif;
-    font-size:30px;
-    letter-spacing:0.5px;
-    color:var(--cream);
-    animation:loadingPulse 1.6s ease-in-out infinite;
+  .loading-scrim{
+    position:absolute; left:0; right:0; bottom:0; height:55%; z-index:1;
+    background:linear-gradient(to top, var(--bg) 0%, rgba(27,20,16,0.88) 45%, transparent 100%);
+    pointer-events:none;
   }
-  .loading-brand span{ color:var(--flame); }
-  @keyframes loadingPulse{ 0%,100%{opacity:.55;} 50%{opacity:1;} }
-  .loading-text{
-    font-family:'Space Mono', monospace;
-    font-size:12px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    color:var(--muted);
+  .loading-content{
+    position:relative; z-index:2; width:100%; max-width:340px;
+    padding:0 30px 54px; display:flex; flex-direction:column; align-items:center; gap:12px;
   }
+  .loading-label{
+    font-family:'Space Mono', monospace; font-size:12.5px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--flame); font-weight:700;
+  }
+  .loading-bar-wrap{ position:relative; width:100%; margin-top:6px; }
+  .loading-pct{
+    position:absolute; right:0; top:-22px;
+    font-family:'Space Mono', monospace; font-size:13px; color:var(--cream); font-weight:700;
+  }
+  .loading-bar-track{
+    width:100%; height:9px; border-radius:99px; background:var(--card-hi);
+    border:1px solid var(--line); overflow:hidden;
+  }
+  .loading-bar-fill{
+    height:100%; width:0%; border-radius:99px;
+    background:linear-gradient(90deg, var(--flame), var(--gold));
+    transition:width .4s ease;
+  }
+  .loading-tagline{
+    font-size:12px; color:var(--muted); text-align:center; margin-top:8px; line-height:1.5;
+  }
+  .loading-tagline .flame-ico{ color:var(--flame); }
   .admin-tab { position:relative; }
   .notif-dot{
     position:absolute; top:-3px; right:-3px;
@@ -1152,9 +1161,18 @@
 <body>
 
 <div class="loading-screen" id="loadingScreen">
-  <div class="loading-ring"></div>
-  <div class="loading-brand">🔥</div>
-  <div class="loading-text">Preparando la carta…</div>
+  <img class="loading-bg-img" id="loadingBgImg" src="" alt="">
+  <div class="loading-scrim"></div>
+  <div class="loading-content">
+    <div class="loading-label" id="loadingLabel">Cargando tu antojo…</div>
+    <div class="loading-bar-wrap">
+      <span class="loading-pct" id="loadingPct">0%</span>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loadingBarFill"></div>
+      </div>
+    </div>
+    <div class="loading-tagline"><span class="flame-ico">🔥</span> Los mejores sabores, preparados solo para ti.</div>
+  </div>
 </div>
 
 <div class="lock-overlay" id="lockOverlay">
@@ -1357,6 +1375,19 @@
           </label>
           <button class="btn-icon" id="removeLogoBtn" style="display:none;" onclick="removeLogo()">✕</button>
         </div>
+      </div>
+
+      <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
+        <label style="margin-top:0;">🌆 Imagen de pantalla de carga</label>
+        <div class="img-preview-container">
+          <img src="" class="img-preview-mini" id="loadingBgPreview" style="display:none;">
+          <label class="file-input-label">
+            📸 Subir imagen
+            <input type="file" hidden accept="image/*" onchange="handleLoadingBgUpload(event)">
+          </label>
+          <button class="btn-icon" id="removeLoadingBgBtn" style="display:none;" onclick="removeLoadingBg()">✕</button>
+        </div>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:0;">* Se muestra de fondo mientras carga la tienda. Usa una foto vertical (formato de pantalla de móvil) para que se vea completa, sin recortes raros.</p>
       </div>
 
       <!-- Hidden Developer Section -->
@@ -2264,6 +2295,104 @@ function removeLogo(){
   loadSettings();
 }
 
+const LOADING_BG_KEY = "loadingScreenBg";
+
+function handleLoadingBgUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = async function(){
+      // Sized for a full-screen phone background — no need for more than this even on retina.
+      const maxWidth = 720;
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.72);
+
+      // Show it immediately (local preview + live loading screen) while it uploads in the background.
+      IMAGES[LOADING_BG_KEY] = compressed;
+      updateLoadingBgPreview();
+      applyLoadingBgImage(compressed);
+
+      // Host it on ImgBB instead of bloating Firestore with a big base64 string, same as product photos.
+      if (IMGBB_API_KEY) {
+        try {
+          const base64Data = compressed.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data && data.success && data.data && data.data.url) {
+            IMAGES[LOADING_BG_KEY] = data.data.url;
+          } else {
+            console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+          }
+        } catch(err) {
+          console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
+        }
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLoadingBg(){
+  delete IMAGES[LOADING_BG_KEY];
+  updateLoadingBgPreview();
+  applyLoadingBgImage("");
+}
+
+function updateLoadingBgPreview(){
+  const prev = document.getElementById('loadingBgPreview');
+  const removeBtn = document.getElementById('removeLoadingBgBtn');
+  if(!prev || !removeBtn) return;
+  const src = IMAGES[LOADING_BG_KEY];
+  if(src){
+    prev.src = src;
+    prev.style.display = 'block';
+    removeBtn.style.display = 'inline-flex';
+  } else {
+    prev.style.display = 'none';
+    removeBtn.style.display = 'none';
+  }
+}
+
+// Shows/hides the full-screen background image on the actual loading screen (if it's still visible)
+function applyLoadingBgImage(src){
+  const bgImg = document.getElementById('loadingBgImg');
+  if(!bgImg) return;
+  if(src){
+    bgImg.src = src;
+    bgImg.style.display = 'block';
+  } else {
+    bgImg.removeAttribute('src');
+    bgImg.style.display = 'none';
+  }
+}
+
+// Fetches just this one image doc (fast, single read) as early as possible during page load,
+// so the loading screen can show it without waiting for the full menu/photos to load.
+async function fetchLoadingBgEarly(){
+  try {
+    const doc = await db.collection("restaurant_images").doc(LOADING_BG_KEY).get();
+    if(doc.exists && doc.data() && doc.data().data){
+      IMAGES[LOADING_BG_KEY] = doc.data().data;
+      applyLoadingBgImage(doc.data().data);
+    }
+  } catch(e){
+    console.warn("No se pudo cargar la imagen de la pantalla de carga:", e);
+  }
+}
+
 function toggleAutoScheduleUI() {
   const on = document.getElementById('set-auto-schedule').checked;
   document.getElementById('autoScheduleFields').style.display = on ? 'block' : 'none';
@@ -2709,6 +2838,7 @@ function loadSettings() {
     logoPrev.style.display = 'none';
     removeBtn.style.display = 'none';
   }
+  updateLoadingBgPreview();
 
   const devSec = document.getElementById('devSection');
   if (IS_DEVELOPER) {
@@ -3231,8 +3361,20 @@ document.getElementById("adminPassInput")?.addEventListener("keyup", function(ev
   }
 });
 
+// Updates the real loading-screen progress bar (percent 0–100, optional status label)
+function setLoadingProgress(percent, label){
+  const fill = document.getElementById('loadingBarFill');
+  const pct = document.getElementById('loadingPct');
+  const labelEl = document.getElementById('loadingLabel');
+  if(fill) fill.style.width = percent + '%';
+  if(pct) pct.textContent = Math.round(percent) + '%';
+  if(label && labelEl) labelEl.textContent = label;
+}
+
 (async function init(){
   updateLogoDisplay(); // show the built-in logo immediately, before the database responds
+  fetchLoadingBgEarly(); // fire-and-forget: swaps in the custom loading photo the moment it arrives, without blocking anything else
+  setLoadingProgress(8, "Cargando tu antojo…");
 
   // If Firestore doesn't respond within 15s (bad connection, offline, etc.), stop waiting
   // and show whatever data is already hardcoded in this file instead of hanging forever.
@@ -3246,6 +3388,7 @@ document.getElementById("adminPassInput")?.addEventListener("keyup", function(ev
 
   const loadPromise = loadFromFirestore();
   await withTimeout(loadPromise, 15000);
+  setLoadingProgress(60, "Preparando la carta…");
 
   rebuildRegistry();
   renderNav();
@@ -3262,20 +3405,26 @@ document.getElementById("adminPassInput")?.addEventListener("keyup", function(ev
     updateStatusUI();
   }).catch((e) => console.error("Error cargando datos de la base de datos:", e));
 
-  // Photos load separately and in the background — the menu/prices are already visible above,
-  // so the customer never has to wait for every photo to download before browsing.
-  loadImagesFromFirestore().then(() => {
-    renderMenu();
-  }).catch((e) => console.error("Error cargando imágenes:", e));
+  // Photos: wait for them briefly (capped) so the progress bar reflects real work, but never
+  // block the loading screen for too long — if it takes longer, they'll just finish loading
+  // quietly in the background after the menu is already shown.
+  setLoadingProgress(70, "Cargando fotos…");
+  const imagesPromise = loadImagesFromFirestore().then(() => { renderMenu(); });
+  await withTimeout(imagesPromise, 6000);
+  imagesPromise.then(() => renderMenu()).catch((e) => console.error("Error cargando imágenes:", e));
+  setLoadingProgress(95, "Casi listo…");
 
   // re-check the schedule every minute so the site opens/closes on time without needing a page refresh
   setInterval(() => { if (AUTO_SCHEDULE) updateStatusUI(); }, 60000);
 
-  // Everything is ready: fade out the loading screen and remove it
+  // Everything is ready: show 100% for a beat, then fade out the loading screen and remove it
+  setLoadingProgress(100, "¡Listo!");
   const loadingEl = document.getElementById('loadingScreen');
   if(loadingEl){
-    loadingEl.classList.add('hide');
-    setTimeout(() => loadingEl.remove(), 550);
+    setTimeout(() => {
+      loadingEl.classList.add('hide');
+      setTimeout(() => loadingEl.remove(), 550);
+    }, 250);
   }
 })();
 </script>
