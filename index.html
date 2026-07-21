@@ -1529,6 +1529,12 @@
 </div>
 
 <script>
+// Records when the loading screen first appeared, so we can guarantee it stays
+// visible for a minimum amount of time (see MIN_LOADING_SCREEN_MS below) even if
+// the data/images load very quickly.
+const __loadingScreenStartTime = Date.now();
+const MIN_LOADING_SCREEN_MS = 2500;
+
 // --- Firebase (persistent database) ---
 const firebaseConfig = {
   apiKey: "AIzaSyAZ9wZVHGjxzgyYaolaS9f5fmjQZpEYRgw",
@@ -3417,14 +3423,18 @@ function setLoadingProgress(percent, label){
   // re-check the schedule every minute so the site opens/closes on time without needing a page refresh
   setInterval(() => { if (AUTO_SCHEDULE) updateStatusUI(); }, 60000);
 
-  // Everything is ready: show 100% for a beat, then fade out the loading screen and remove it
+  // Everything is ready: show 100% for a beat, then fade out the loading screen and remove it.
+  // We also make sure the screen (and its photo) has been visible for at least
+  // MIN_LOADING_SCREEN_MS in total, so it never flashes by too fast on quick connections.
   setLoadingProgress(100, "¡Listo!");
   const loadingEl = document.getElementById('loadingScreen');
   if(loadingEl){
+    const elapsed = Date.now() - __loadingScreenStartTime;
+    const remaining = Math.max(0, MIN_LOADING_SCREEN_MS - elapsed);
     setTimeout(() => {
       loadingEl.classList.add('hide');
       setTimeout(() => loadingEl.remove(), 550);
-    }, 250);
+    }, remaining + 250);
   }
 })();
 </script>
