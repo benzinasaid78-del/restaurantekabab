@@ -1147,6 +1147,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1373,6 +1374,12 @@
           </div>
           <p style="font-size:11px; color:#ff0055; margin-top:10px; margin-bottom:0;">* Al activar esto, el sitio quedará totalmente inaccesible para todos.</p>
         </div>
+      </div>
+
+      <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
+        <span style="font-weight:bold; color:var(--cream);">📊 Exportar datos</span>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Descarga un archivo Excel (.xlsx) con el menú completo, los pedidos y la configuración de la tienda.</p>
+        <button class="btn-small" id="exportExcelBtn" style="width:100%;" onclick="exportAllDataToExcel()">⬇️ Exportar todo (Excel)</button>
       </div>
 
       <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
@@ -2977,6 +2984,70 @@ function addNewItem(catIdx) {
 function deleteItem(catIdx, itemIdx) {
   menuData[catIdx].items.splice(itemIdx, 1);
   renderAdminPanel();
+}
+
+// --- Export the whole store's data (menu, orders, settings) as a single Excel file ---
+async function exportAllDataToExcel(){
+  const btn = document.getElementById('exportExcelBtn');
+  const originalText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Generando…'; }
+  try {
+    if(typeof XLSX === 'undefined'){
+      showToast('⚠️', 'No se pudo cargar la librería de Excel. Revisa tu conexión.', true);
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Menú (one row per product, or per variant when the product has size/type options)
+    const menuRows = [["Categoría","Producto","Descripción","Variante","Precio (€)","Destacado"]];
+    menuData.forEach(cat => {
+      cat.items.forEach(it => {
+        if(it.variants && it.variants.length){
+          it.variants.forEach(v => {
+            menuRows.push([cat.cat, it.name, it.desc || "", v.label, v.price, it.featured ? "Sí" : "No"]);
+          });
+        } else {
+          menuRows.push([cat.cat, it.name, it.desc || "", "", it.price ?? "", it.featured ? "Sí" : "No"]);
+        }
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(menuRows), "Menú");
+
+    // Sheet 2: Pedidos (fetched fresh from Firestore so the export is up to date)
+    const orderRows = [["Nº Pedido","Fecha","Dirección","Teléfono","Notas","Productos","Total (€)","Completado"]];
+    try {
+      const ordersSnap = await db.collection("orders").orderBy("createdAt", "desc").limit(1000).get();
+      ordersSnap.forEach(doc => {
+        const o = doc.data();
+        const when = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleString('es-ES') : "";
+        const itemsText = (o.items || []).map(it => `${it.qty}x ${it.name}`).join(", ");
+        orderRows.push([o.orderNumber ?? "", when, o.address || "", o.phone || "", o.notes || "", itemsText, o.total || 0, o.completed ? "Sí" : "No"]);
+      });
+    } catch(e){
+      console.error("No se pudieron exportar los pedidos:", e);
+    }
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(orderRows), "Pedidos");
+
+    // Sheet 3: Configuración
+    const configRows = [
+      ["Campo", "Valor"],
+      ["Nombre del restaurante", document.getElementById('mainTitle') ? document.getElementById('mainTitle').innerText : ""],
+      ["WhatsApp", WHATSAPP_NUMBER],
+      ["Horario automático", AUTO_SCHEDULE ? "Activado" : "Desactivado"],
+      ["Tiempo de entrega (min)", `${DELIVERY_MIN_MINUTES}–${DELIVERY_MAX_MINUTES}`],
+      ["Estado actual", isStoreOpen() ? "Abierto" : "Cerrado"],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(configRows), "Configuración");
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `datos-tienda-${dateStr}.xlsx`);
+    showToast("✅", "Excel descargado correctamente.");
+  } catch(e){
+    console.error("No se pudo generar el Excel:", e);
+    showToast("⚠️", "No se pudo generar el archivo Excel.", true);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = originalText; }
+  }
 }
 
 async function saveAndDownload() {
