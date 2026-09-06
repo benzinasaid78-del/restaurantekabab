@@ -19,6 +19,7 @@
 <meta name="twitter:description" content="Döner, dürum, kebab, hamburguesas y más. Recibe tu pedido en casa en pocos minutos.">
 <meta name="twitter:image" content="https://benzinasaid78-del.github.io/restaurantekabab/og-image.png">
 
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
@@ -1156,6 +1157,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -1281,6 +1283,13 @@
       <div id="statsContent"><p class="hint">Cargando estadísticas…</p></div>
     </div>
     <div id="tab-settings" class="admin-section">
+      <div style="border:1px solid var(--flame-dim); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
+        <span style="font-weight:bold; color:var(--gold);">🔔 Notificaciones de nuevos pedidos</span>
+        <p style="font-size:12px; color:var(--muted); margin-top:8px; margin-bottom:12px;">Actívalas en cada dispositivo desde el que quieras recibir el aviso (sonido + notificación) cuando llegue un pedido nuevo, incluso con la pantalla bloqueada o la app cerrada.</p>
+        <button class="btn-small" id="enableNotifBtn" style="background:var(--flame); color:white; width:100%; padding:12px;" onclick="enableAdminNotifications()">🔔 Activar notificaciones en este dispositivo</button>
+        <p id="notifStatusMsg" style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:0;"></p>
+      </div>
+
       <div class="status-toggle" id="manualStatusToggle">
         <span style="font-weight:bold; color:var(--cream);">Estado del Restaurante</span>
         <label class="switch">
@@ -1473,9 +1482,9 @@
     <label for="notes">Notas del pedido</label>
     <textarea id="notes" placeholder="Sin cebolla, timbre roto, etc. (opcional)"></textarea>
 
-    <button class="send-btn" id="sendBtn" onclick="sendOrder()">📲 Enviar pedido por WhatsApp</button>
+    <button class="send-btn" id="sendBtn" onclick="sendOrder()">✅ Confirmar pedido</button>
     <button class="call-btn" onclick="callRestaurant()">📞 Llamar para pedir</button>
-    <div class="hint">Se abrirá WhatsApp con tu pedido ya escrito, listo para enviar</div>
+    <div class="hint">Tu pedido se recibirá directamente en nuestro sistema</div>
   </div>
 </div>
 
@@ -1494,18 +1503,11 @@
   <div class="sheet" style="text-align:center;">
     <button class="close-btn" onclick="closeConfirmation()">✕</button>
     <div class="sheet-handle"></div>
-    <div class="confirm-check" style="background:var(--gold); color:var(--bg);">📲</div>
-    <h3 class="display">¡Ya casi está!</h3>
-    <div class="subhead">Pulsa el botón para enviar tu pedido por WhatsApp. Tu pedido no llegará al restaurante hasta que lo hagas.</div>
+    <div class="confirm-check" style="background:var(--gold); color:var(--bg);">✅</div>
+    <h3 class="display">¡Pedido confirmado!</h3>
+    <div class="subhead">Tu pedido ya se ha recibido en nuestro sistema. Guarda tu número de pedido.</div>
 
-    <a id="confirmWaLink" class="send-btn" href="#" target="_blank" rel="noopener noreferrer" onclick="markOrderAsSent()" style="text-decoration:none; margin-top:18px;">📲 Enviar pedido por WhatsApp</a>
-    <button class="call-btn" style="margin-top:10px; border-color:var(--flame);" onclick="showNoWhatsappError()">❌ No tengo WhatsApp instalado</button>
-
-    <div id="noWhatsappBox" style="display:none; margin:16px 0 12px; padding:18px; background:rgba(214,73,51,0.12); border:1px solid var(--flame); border-radius:14px; text-align:left;">
-      <div style="color:var(--flame); font-weight:bold; margin-bottom:8px;">⚠️ Necesitas WhatsApp para completar tu pedido</div>
-      <div style="color:var(--cream); font-size:14px; margin-bottom:10px;">Este pedido se hace únicamente por WhatsApp. Instala la app y vuelve a intentarlo, o llama directamente al restaurante.</div>
-      <a href="https://www.whatsapp.com/download" target="_blank" rel="noopener noreferrer" style="color:var(--gold); font-size:14px; text-decoration:underline;">📥 Descargar WhatsApp</a>
-    </div>
+    <a id="confirmWaLink" class="call-btn" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:none; margin-top:18px; border-color:var(--green); color:var(--green);">📲 Enviar también una copia por WhatsApp (opcional)</a>
 
     <div id="orderNumberBox" style="display:none; margin:16px 0 12px; padding:18px; background:var(--card-hi); border:1px solid var(--flame-dim); border-radius:14px;">
       <div style="font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;">Número de pedido</div>
@@ -1547,6 +1549,64 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// --- Push notifications (Firebase Cloud Messaging) ---
+// Public VAPID key for this project — safe to keep in client-side code (it's meant to be public,
+// unlike the Firebase Admin/service-account key which must never appear in a browser file).
+const VAPID_KEY = "BM17ev5dxqc0GMaE8wt5FjELddJuIAoyzabNREZ8RNusn9mHJss6qOmyJtcvH5iqWiPHadD87uegXH9-ryKAL4I";
+let messaging = null;
+if ('serviceWorker' in navigator && firebase.messaging.isSupported()) {
+  navigator.serviceWorker.register('firebase-messaging-sw.js')
+    .then((registration) => {
+      messaging = firebase.messaging();
+      // Shows an alert (sound + toast) if a push arrives WHILE the admin panel is already open —
+      // the background case (tab closed/locked) is handled separately in firebase-messaging-sw.js.
+      messaging.onMessage(() => {
+        playOrderAlert();
+        showToast("🔔", "¡Nuevo pedido recibido!");
+      });
+    })
+    .catch((e) => console.warn("No se pudo registrar el service worker de notificaciones:", e));
+}
+
+// Called from the "Activar notificaciones" button in Ajustes. Asks the browser for permission,
+// gets this device's unique FCM token, and saves it so a Cloud Function can push to it later.
+async function enableAdminNotifications(){
+  const btn = document.getElementById('enableNotifBtn');
+  const msg = document.getElementById('notifStatusMsg');
+  if (!messaging) {
+    msg.textContent = "⚠️ Este navegador no soporta notificaciones push, o la página no se sirve por HTTPS.";
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Activando...";
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      msg.textContent = "❌ Permiso denegado. Actívalo desde los ajustes de notificaciones del navegador.";
+      return;
+    }
+    const registration = await navigator.serviceWorker.ready;
+    const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+    if (!token) {
+      msg.textContent = "⚠️ No se pudo generar el token de este dispositivo.";
+      return;
+    }
+    await db.collection("adminDevices").doc(token).set({
+      token,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent: navigator.userAgent
+    });
+    msg.textContent = "✅ Notificaciones activadas en este dispositivo.";
+    showToast("✅", "Notificaciones activadas en este dispositivo.");
+  } catch(e) {
+    console.error("Error activando notificaciones:", e);
+    msg.textContent = "⚠️ Hubo un error activando las notificaciones. Inténtalo de nuevo.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🔔 Activar notificaciones en este dispositivo";
+  }
+}
 
 let WHATSAPP_NUMBER = "34641821406"; // TEST NUMBER - CHANGE ONLY AT FINAL DEPLOYMENT
 let IMGBB_API_KEY = "a788a2bbbc7beea20efff1303259e807"; // used to host admin-uploaded product photos instead of bloating Firestore; editable from the developer panel
@@ -2101,41 +2161,11 @@ async function getNextOrderNumber(){
   });
 }
 
-let pendingOrder = null; // holds everything needed to actually record the order once WhatsApp is opened
-
+// The order is already saved in Firestore by the time this runs (see sendOrder), so we can
+// show the delivery ETA and "saved" hint immediately — no extra click (e.g. opening WhatsApp)
+// is needed for the order to count as received.
 function showOrderConfirmation(orderNumber, addr, total){
   document.getElementById("confirmOrderNumber").textContent = "#" + orderNumber;
-
-  document.getElementById("noWhatsappBox").style.display = "none";
-  document.getElementById("orderNumberBox").style.display = "block";
-  document.getElementById("deliveryWindowBox").style.display = "none"; // only shown after the WhatsApp link is actually clicked
-  document.getElementById("orderSavedHint").style.display = "none";
-
-  document.getElementById("confirmAddr").textContent = addr;
-  document.getElementById("confirmTotal").textContent = fmt(total);
-
-  document.getElementById("confirmOverlay").classList.add("show");
-}
-
-function closeConfirmation(){
-  document.getElementById("confirmOverlay").classList.remove("show");
-  pendingOrder = null;
-}
-
-function showNoWhatsappError(){
-  document.getElementById("noWhatsappBox").style.display = "block";
-  document.getElementById("orderNumberBox").style.display = "none";
-  document.getElementById("deliveryWindowBox").style.display = "none";
-  document.getElementById("orderSavedHint").style.display = "none";
-}
-
-// Fires only when the person actually clicks the real WhatsApp link — this is the one moment
-// we can be sure they took a genuine action, so this is when the order is actually recorded.
-async function markOrderAsSent(){
-  if(!pendingOrder) return;
-  const { orderNumber, orderItems, total, addr, phone, notes } = pendingOrder;
-
-  document.getElementById("noWhatsappBox").style.display = "none";
   document.getElementById("orderNumberBox").style.display = "block";
 
   const now = new Date();
@@ -2146,16 +2176,14 @@ async function markOrderAsSent(){
   document.getElementById("deliveryWindowBox").style.display = "block";
   document.getElementById("orderSavedHint").style.display = "block";
 
-  try {
-    await db.collection("orders").add({
-      orderNumber, items: orderItems, total, address: addr, phone, notes,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch(e){
-    console.error("No se pudo guardar el pedido en el historial:", e);
-  }
+  document.getElementById("confirmAddr").textContent = addr;
+  document.getElementById("confirmTotal").textContent = fmt(total);
 
-  pendingOrder = null;
+  document.getElementById("confirmOverlay").classList.add("show");
+}
+
+function closeConfirmation(){
+  document.getElementById("confirmOverlay").classList.remove("show");
 }
 
 function callRestaurant(){
@@ -2196,26 +2224,35 @@ async function sendOrder(){
     orderNumber = Math.floor(1000 + Math.random() * 9000); // offline fallback
   }
 
-  let msg = `*Pedido #${orderNumber} — ${restName}*\n\n`;
-
   const orderItems = [];
   entries.forEach(([id, qty]) => {
     const info = registry[id];
-    const sub = info.price * qty;
-    msg += `${qty}x ${info.name} · ${sub.toFixed(2)}€\n`;
     orderItems.push({ name: info.name, qty, price: info.price });
   });
 
+  // The order is recorded in our own system the moment the customer confirms it here —
+  // it no longer depends on WhatsApp being opened or clicked. This is what makes the order
+  // "received": it lands straight in Firestore and the admin panel's live listener/alert.
+  try {
+    await db.collection("orders").add({
+      orderNumber, items: orderItems, total, address: addr, phone, notes,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e){
+    console.error("No se pudo guardar el pedido en el historial:", e);
+  }
+
+  // The WhatsApp message/link below is now purely optional — a courtesy copy the customer
+  // can choose to send themselves. It plays no role in the order being received.
+  let msg = `*Pedido #${orderNumber} — ${restName}*\n\n`;
+  orderItems.forEach(it => {
+    msg += `${it.qty}x ${it.name} · ${(it.price * it.qty).toFixed(2)}€\n`;
+  });
   msg += `\n*Total: ${total.toFixed(2)}€*\n\n`;
   msg += `Dirección: ${addr}\n`;
   if(phone) msg += `Teléfono: ${phone}\n`;
   if(notes) msg += `Notas: ${notes}\n`;
   msg += `Hora: ${timeStr}`;
-
-  // NOTE: nothing is written to the database yet. The order is only recorded once the
-  // customer actually clicks the WhatsApp link below (see markOrderAsSent()). This is what
-  // stops "phantom" orders from showing up when someone never had WhatsApp to begin with.
-  pendingOrder = { orderNumber, orderItems, total, addr, phone, notes };
 
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   document.getElementById("confirmWaLink").href = url;

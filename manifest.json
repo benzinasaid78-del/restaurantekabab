@@ -1,0 +1,9 @@
+{
+  "name": "Doner Kebab Lahori",
+  "short_name": "Kebab Lahori",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1B1410",
+  "theme_color": "#1B1410",
+  "icons": []
+}
