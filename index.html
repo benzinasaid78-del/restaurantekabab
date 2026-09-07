@@ -560,6 +560,43 @@
     display:flex; align-items:center; gap:6px;
     font-size:12.5px; color:var(--muted); cursor:pointer;
   }
+
+  /* Order status pipeline (used in both the admin order card and the customer tracking view) */
+  .status-pipeline{
+    display:flex; align-items:flex-start; margin:14px 0 10px;
+  }
+  .status-step{
+    display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; min-width:0;
+  }
+  .status-step-icon{
+    width:30px; height:30px; border-radius:99px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card-hi); border:1px solid var(--line);
+    font-size:14px; opacity:0.45;
+  }
+  .status-step.done .status-step-icon{ background:var(--flame-dim); border-color:var(--flame-dim); opacity:1; }
+  .status-step.current .status-step-icon{ background:var(--flame); border-color:var(--flame); opacity:1; box-shadow:0 0 0 4px rgba(214,73,51,0.2); }
+  .status-step-label{
+    font-size:10px; color:var(--muted); text-align:center; line-height:1.2;
+  }
+  .status-step.done .status-step-label, .status-step.current .status-step-label{ color:var(--cream); }
+  .status-line{
+    height:2px; background:var(--line); flex-shrink:0; width:100%; margin-top:15px;
+  }
+  .status-line.done{ background:var(--flame-dim); }
+  .status-cancelled{
+    color:var(--flame); font-weight:bold; font-size:13px; margin:14px 0 10px;
+  }
+  .order-status-actions{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;
+  }
+  .track-order-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:12px; padding:9px 18px;
+    background:var(--card); border:1px solid var(--line); border-radius:999px;
+    color:var(--gold); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  .track-order-btn:active{ background:var(--card-hi); }
   .close-btn{
     position:absolute;
     top:18px; right:18px;
@@ -1270,10 +1307,25 @@
     </a>
   </div>
   <p class="footer-note">Síguenos en nuestras redes para más información</p>
+  <button class="track-order-btn" onclick="openTrackOrder()">📦 Seguir mi pedido</button>
   <p class="privacy-note">
     <b>Privacidad:</b> los datos que nos facilitas al hacer un pedido (dirección, teléfono, notas) se usan únicamente para gestionar y entregar ese pedido, y se envían por WhatsApp para su procesamiento. No compartimos tus datos con terceros con fines comerciales. Puedes solicitar en cualquier momento el acceso, la rectificación o la eliminación de tus datos contactándonos por WhatsApp.
   </p>
 </footer>
+
+<div class="overlay" id="trackOverlay" onclick="if(event.target===this) closeTrackOrder()">
+  <div class="sheet" style="text-align:center;">
+    <button class="close-btn" onclick="closeTrackOrder()">✕</button>
+    <div class="sheet-handle"></div>
+    <h3 class="display">Seguir mi pedido</h3>
+    <div class="subhead">Introduce tu número de pedido para ver en qué punto está</div>
+    <div style="display:flex; gap:8px; margin:18px 0 8px;">
+      <input type="text" id="trackOrderInput" placeholder="Ej: 23" inputmode="numeric" style="flex:1; margin:0;">
+      <button class="send-btn" style="width:auto; padding:0 22px; margin:0;" onclick="searchOrderStatus()">Buscar</button>
+    </div>
+    <div id="trackResult"></div>
+  </div>
+</div>
 
 
 <div class="app-toast-wrap" id="appToastWrap"></div>
@@ -1567,6 +1619,7 @@
     </div>
 
     <div id="orderSavedHint" class="hint" style="display:none; margin-bottom:16px;">Guarda el número de pedido por si necesitas consultarlo</div>
+    <button class="call-btn" id="trackThisOrderBtn" style="display:none; margin-bottom:10px;" onclick="openTrackOrder(lastOrderNumber)">📦 Seguir este pedido</button>
     <button class="call-btn" onclick="closeConfirmation()">Cerrar</button>
     <button class="call-btn" style="margin-top:10px;" onclick="callRestaurant()">📞 ¿Algún problema? Llámanos</button>
   </div>
@@ -2157,6 +2210,7 @@ function showOrderConfirmation(orderNumber, addr, total){
   document.getElementById("orderNumberBox").style.display = "block";
   document.getElementById("deliveryWindowBox").style.display = "none"; // only shown after the WhatsApp link is actually clicked
   document.getElementById("orderSavedHint").style.display = "none";
+  document.getElementById("trackThisOrderBtn").style.display = "none";
 
   document.getElementById("confirmAddr").textContent = addr;
   document.getElementById("confirmTotal").textContent = fmt(total);
@@ -2174,10 +2228,12 @@ function showNoWhatsappError(){
   document.getElementById("orderNumberBox").style.display = "none";
   document.getElementById("deliveryWindowBox").style.display = "none";
   document.getElementById("orderSavedHint").style.display = "none";
+  document.getElementById("trackThisOrderBtn").style.display = "none";
 }
 
 // Fires only when the person actually clicks the real WhatsApp link — this is the one moment
 // we can be sure they took a genuine action, so this is when the order is actually recorded.
+let lastOrderNumber = null;
 async function markOrderAsSent(){
   if(!pendingOrder) return;
   const { orderNumber, orderItems, total, addr, phone, notes } = pendingOrder;
@@ -2195,9 +2251,11 @@ async function markOrderAsSent(){
 
   try {
     await db.collection("orders").add({
-      orderNumber, items: orderItems, total, address: addr, phone, notes,
+      orderNumber, items: orderItems, total, address: addr, phone, notes, status: "recibido",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    lastOrderNumber = orderNumber;
+    document.getElementById("trackThisOrderBtn").style.display = "block";
   } catch(e){
     console.error("No se pudo guardar el pedido en el historial:", e);
   }
@@ -2609,6 +2667,103 @@ function startOrdersListener(){
     });
 }
 
+// --- Order status pipeline: shared between the admin order cards and the customer tracking view ---
+const ORDER_STATUSES = [
+  { key: "recibido",   label: "Recibido",   icon: "📥" },
+  { key: "preparando", label: "Preparando", icon: "👨‍🍳" },
+  { key: "listo",      label: "Listo",      icon: "🛵" },
+  { key: "entregado",  label: "Entregado",  icon: "✅" }
+];
+
+function orderStatusIndex(status){
+  const i = ORDER_STATUSES.findIndex(s => s.key === status);
+  return i === -1 ? 0 : i; // unknown/legacy orders (created before this feature) default to "Recibido"
+}
+
+function renderStatusPipeline(status){
+  if(status === "cancelado"){
+    return `<div class="status-cancelled">❌ Pedido cancelado</div>`;
+  }
+  const idx = orderStatusIndex(status);
+  let html = '<div class="status-pipeline">';
+  ORDER_STATUSES.forEach((s, i) => {
+    if(i > 0) html += `<div class="status-line ${i <= idx ? 'done' : ''}"></div>`;
+    html += `<div class="status-step ${i < idx ? 'done' : ''} ${i === idx ? 'current' : ''}">
+      <div class="status-step-icon">${s.icon}</div>
+      <div class="status-step-label">${s.label}</div>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+async function advanceOrderStatus(orderId, newStatus){
+  try {
+    await db.collection("orders").doc(orderId).update({ status: newStatus });
+  } catch(e){
+    console.error("No se pudo actualizar el estado del pedido:", e);
+    showToast("⚠️", "No se pudo actualizar el pedido.", true);
+  }
+}
+
+async function cancelOrder(orderId){
+  if(!confirm("¿Seguro que quieres cancelar este pedido?")) return;
+  try {
+    await db.collection("orders").doc(orderId).update({ status: "cancelado" });
+  } catch(e){
+    console.error("No se pudo cancelar el pedido:", e);
+    showToast("⚠️", "No se pudo cancelar el pedido.", true);
+  }
+}
+
+// --- Customer-facing order tracking (looked up by order number, live-updating) ---
+let trackUnsub = null;
+
+function openTrackOrder(prefillNumber){
+  document.getElementById("trackOrderInput").value = prefillNumber || "";
+  document.getElementById("trackResult").innerHTML = "";
+  document.getElementById("trackOverlay").classList.add("show");
+  if(prefillNumber) searchOrderStatus();
+}
+
+function closeTrackOrder(){
+  document.getElementById("trackOverlay").classList.remove("show");
+  if(trackUnsub){ trackUnsub(); trackUnsub = null; }
+}
+
+async function searchOrderStatus(){
+  const raw = document.getElementById("trackOrderInput").value.trim();
+  const num = parseInt(raw, 10);
+  const resultBox = document.getElementById("trackResult");
+
+  if(!raw || isNaN(num)){
+    resultBox.innerHTML = `<p class="hint" style="color:var(--flame);">Escribe un número de pedido válido.</p>`;
+    return;
+  }
+
+  resultBox.innerHTML = `<p class="hint">Buscando…</p>`;
+  if(trackUnsub){ trackUnsub(); trackUnsub = null; }
+
+  try {
+    const snap = await db.collection("orders").where("orderNumber", "==", num).limit(1).get();
+    if(snap.empty){
+      resultBox.innerHTML = `<p class="hint" style="color:var(--flame);">No se encontró ningún pedido con ese número.</p>`;
+      return;
+    }
+    trackUnsub = snap.docs[0].ref.onSnapshot(d => {
+      if(!d.exists) return;
+      const o = d.data();
+      resultBox.innerHTML = `
+        <div style="margin:6px 0 2px; font-family:'Space Mono'; color:var(--gold); font-size:22px; font-weight:bold;">#${o.orderNumber}</div>
+        ${renderStatusPipeline(o.status || "recibido")}
+      `;
+    });
+  } catch(e){
+    console.error("Error buscando el pedido:", e);
+    resultBox.innerHTML = `<p class="hint" style="color:var(--flame);">Ocurrió un error al buscar tu pedido.</p>`;
+  }
+}
+
 function renderOrdersList(snap, newlyAdded){
   newlyAdded = newlyAdded || [];
   const box = document.getElementById('ordersListContent');
@@ -2621,13 +2776,18 @@ function renderOrdersList(snap, newlyAdded){
   snap.forEach(doc => {
     const o = doc.data();
     const id = doc.id;
+    // Back-compat: orders created before this feature only have a `completed` boolean
+    const status = o.status || (o.completed ? "entregado" : "recibido");
+    const idx = orderStatusIndex(status);
+    const isFinal = status === "entregado" || status === "cancelado";
+    const nextStatus = ORDER_STATUSES[idx + 1];
     const when = o.createdAt && o.createdAt.toDate
       ? o.createdAt.toDate().toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})
       : '—';
     const itemsHtml = (o.items || []).map(it => `${it.qty}x ${it.name}`).join('<br>');
     const card = document.createElement('div');
     const isNew = newlyAdded.includes(id);
-    card.className = 'order-card' + (o.completed ? ' done' : '') + (isNew ? ' just-added' : '');
+    card.className = 'order-card' + (isFinal ? ' done' : '') + (isNew ? ' just-added' : '');
     card.innerHTML = `
       <div class="order-top">
         <span class="order-num">#${o.orderNumber ?? '—'}</span>
@@ -2639,12 +2799,13 @@ function renderOrdersList(snap, newlyAdded){
         ${o.phone ? `📞 <b>${o.phone}</b><br>` : ""}
         ${o.notes ? `📝 ${o.notes}` : ""}
       </div>
+      ${renderStatusPipeline(status)}
+      <div class="order-status-actions">
+        ${!isFinal && nextStatus ? `<button class="btn-small" onclick="advanceOrderStatus('${id}','${nextStatus.key}')">${nextStatus.icon} Marcar: ${nextStatus.label}</button>` : ''}
+        ${!isFinal ? `<button class="btn-small btn-danger" onclick="cancelOrder('${id}')">Cancelar</button>` : ''}
+      </div>
       <div class="order-bottom">
         <span class="order-total">${fmt(o.total || 0)}</span>
-        <label class="order-done-toggle">
-          <input type="checkbox" ${o.completed ? 'checked' : ''} onchange="toggleOrderDone('${id}', this.checked, this)">
-          Completado
-        </label>
       </div>
     `;
     box.appendChild(card);
