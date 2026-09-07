@@ -2608,15 +2608,24 @@ function playOrderAlert(){
   try {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel(); // clear any queued utterances so repeats don't pile up across quick orders
+
     const repeats = 3;
-    for(let i = 0; i < repeats; i++){
+    // Speak one utterance at a time (next one only starts once the previous ends) instead of
+    // queueing all 3 at once — queueing them together silently produces no sound on some
+    // Android Chrome versions right after cancel(). A short delay before the first one avoids
+    // the same cancel()+speak() race.
+    const speakOne = (i) => {
+      if (i >= repeats) return;
       const utter = new SpeechSynthesisUtterance("Tienes nuevo pedido");
       utter.lang = "es-ES";
       utter.rate = 1;
       utter.pitch = 1;
       utter.volume = 1;
+      utter.onend = () => speakOne(i + 1);
+      utter.onerror = () => speakOne(i + 1);
       window.speechSynthesis.speak(utter);
-    }
+    };
+    setTimeout(() => speakOne(0), 80);
   } catch(e){ console.error("No se pudo reproducir el aviso de voz:", e); }
 }
 
