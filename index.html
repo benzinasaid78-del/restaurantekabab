@@ -563,25 +563,26 @@
 
   /* Order status pipeline (used in both the admin order card and the customer tracking view) */
   .status-pipeline{
-    display:flex; align-items:flex-start; margin:14px 0 10px;
+    display:flex; align-items:flex-start; margin:14px 0 10px; width:100%;
   }
   .status-step{
-    display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; min-width:0;
+    display:flex; flex-direction:column; align-items:center; gap:4px; flex:0 1 56px; min-width:0;
   }
   .status-step-icon{
-    width:30px; height:30px; border-radius:99px;
+    width:26px; height:26px; border-radius:99px;
     display:flex; align-items:center; justify-content:center;
     background:var(--card-hi); border:1px solid var(--line);
-    font-size:14px; opacity:0.45;
+    font-size:12px; opacity:0.45; flex-shrink:0;
   }
   .status-step.done .status-step-icon{ background:var(--flame-dim); border-color:var(--flame-dim); opacity:1; }
   .status-step.current .status-step-icon{ background:var(--flame); border-color:var(--flame); opacity:1; box-shadow:0 0 0 4px rgba(214,73,51,0.2); }
   .status-step-label{
-    font-size:10px; color:var(--muted); text-align:center; line-height:1.2;
+    font-size:9px; color:var(--muted); text-align:center; line-height:1.15;
+    word-break:break-word; max-width:56px;
   }
   .status-step.done .status-step-label, .status-step.current .status-step-label{ color:var(--cream); }
   .status-line{
-    height:2px; background:var(--line); flex-shrink:0; width:100%; margin-top:15px;
+    height:2px; background:var(--line); flex:1 1 auto; min-width:6px; margin-top:13px;
   }
   .status-line.done{ background:var(--flame-dim); }
   .status-cancelled{
