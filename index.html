@@ -1160,10 +1160,6 @@
   }
   .stats-empty{ color:var(--muted); text-align:center; padding:30px 0; font-size:13px; }
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1181,6 +1177,11 @@
     <div class="loading-tagline"><span class="flame-ico">🔥</span> Los mejores sabores, preparados solo para ti.</div>
   </div>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <div class="lock-overlay" id="lockOverlay">
   <h1 class="display" id="lockTitle" style="color:#ff0055; font-size:50px; cursor:default; user-select:none;">SERVICIO SUSPENDIDO</h1>
@@ -1540,7 +1541,7 @@
 // visible for a minimum amount of time (see MIN_LOADING_SCREEN_MS below) even if
 // the data/images load very quickly.
 const __loadingScreenStartTime = Date.now();
-const MIN_LOADING_SCREEN_MS = 2500;
+const MIN_LOADING_SCREEN_MS = 3000;
 
 // --- Firebase (persistent database) ---
 const firebaseConfig = {
@@ -3004,8 +3005,13 @@ function findContentBox(img) {
   const padW = boxW * pad, padH = boxH * pad;
   const fx = Math.max(0, left - padW) / scale;
   const fy = Math.max(0, top - padH) / scale;
-  const fw = Math.min(probeW, right - left + padW*2) / scale;
-  const fh = Math.min(probeH, bottom - top + padH*2) / scale;
+  let fw = Math.min(probeW, right - left + padW*2) / scale;
+  let fh = Math.min(probeH, bottom - top + padH*2) / scale;
+  // Safety clamp: never let the crop box extend past the real image edges
+  // (rounding/scale error here is exactly what left slivers of the canvas
+  // unpainted → rendered as black borders after JPEG export).
+  fw = Math.min(fw, img.width - fx);
+  fh = Math.min(fh, img.height - fy);
   return { x: fx, y: fy, w: fw, h: fh };
 }
 
@@ -3026,6 +3032,13 @@ function handleImgUpload(event, catIdx, itemIdx) {
       canvas.width = Math.round(box.w * scale);
       canvas.height = Math.round(box.h * scale);
       const ctx = canvas.getContext('2d');
+      // Fill white first: if the auto-crop box extends even slightly past the real edge
+      // of the source photo (rounding/padding), that sliver is left unpainted by drawImage.
+      // Canvas leaves unpainted pixels transparent, and JPEG export (no alpha channel)
+      // turns transparent into BLACK instead of white — that's what caused the black
+      // borders on some photos. Painting white first guarantees any such sliver is white.
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, box.x, box.y, box.w, box.h, 0, 0, canvas.width, canvas.height);
       const compressed = canvas.toDataURL('image/jpeg', 0.66);
 
