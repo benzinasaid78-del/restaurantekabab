@@ -2601,32 +2601,32 @@ function unlockAudio(){
   } catch(e){}
 }
 
-// Plays a spoken alert ("Tienes nuevo pedido") using the browser's built-in text-to-speech,
-// repeated a few times so it's hard to miss even in a noisy kitchen and even if the cook
-// isn't looking at the screen.
+// Plays a longer, more insistent alert (~3.5s, repeats the chime 3 times) using a harsher
+// square wave instead of a soft sine tone — cuts through noisy kitchen background sound much
+// better and gives the cook enough time to notice it even if they're not near the screen.
 function playOrderAlert(){
   try {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel(); // clear any queued utterances so repeats don't pile up across quick orders
-
-    const repeats = 3;
-    // Speak one utterance at a time (next one only starts once the previous ends) instead of
-    // queueing all 3 at once — queueing them together silently produces no sound on some
-    // Android Chrome versions right after cancel(). A short delay before the first one avoids
-    // the same cancel()+speak() race.
-    const speakOne = (i) => {
-      if (i >= repeats) return;
-      const utter = new SpeechSynthesisUtterance("Tienes nuevo pedido");
-      utter.lang = "es-ES";
-      utter.rate = 1;
-      utter.pitch = 1;
-      utter.volume = 1;
-      utter.onend = () => speakOne(i + 1);
-      utter.onerror = () => speakOne(i + 1);
-      window.speechSynthesis.speak(utter);
-    };
-    setTimeout(() => speakOne(0), 80);
-  } catch(e){ console.error("No se pudo reproducir el aviso de voz:", e); }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const cycleDuration = 1.15; // one "ding-dong" + gap before repeating
+    const cycles = 3;
+    for(let c = 0; c < cycles; c++){
+      const base = now + c * cycleDuration;
+      [{freq:880, start:0, dur:0.32}, {freq:1175, start:0.30, dur:0.42}].forEach(tone => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.value = tone.freq;
+        gain.gain.setValueAtTime(0, base + tone.start);
+        gain.gain.linearRampToValueAtTime(0.35, base + tone.start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, base + tone.start + tone.dur);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(base + tone.start);
+        osc.stop(base + tone.start + tone.dur + 0.05);
+      });
+    }
+  } catch(e){ console.error("No se pudo reproducir el sonido de alerta:", e); }
 }
 
 function flashOrdersBadge(){
