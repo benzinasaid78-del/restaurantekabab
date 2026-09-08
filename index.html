@@ -1560,18 +1560,6 @@
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🏷️ Texto pequeño arriba del título (ej: "Pedido directo · sin registro")</label>
-        <input type="text" id="set-eyebrow-text" value="" placeholder="Déjalo vacío para quitarlo por completo">
-        <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Si lo dejas vacío, esa línea desaparecerá de la página.</p>
-      </div>
-
-      <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🔑 Clave API de ImgBB (para fotos rápidas)</label>
-        <input type="text" id="set-imgbb-key" value="" placeholder="Pega aquí tu clave de api.imgbb.com">
-        <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Las fotos que subas desde el panel se guardan en ImgBB (rápido) en vez de en Firestore (lento). Si se deja vacío, se guardan en Firestore como antes.</p>
-      </div>
-
-      <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
         <label style="margin-top:0;">🖼️ Logo del restaurante</label>
         <div class="img-preview-container">
           <img src="" class="img-preview-mini" id="logoPreview" style="display:none;">
@@ -1600,8 +1588,19 @@
       <div id="devSection" class="dev-only">
         <h5 style="color:#ff0055; margin-bottom:14px;">🛠️ PANEL DE DESARROLLADOR</h5>
 
+        <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
+          <label style="margin-top:0;">🏷️ Texto pequeño arriba del título (ej: "Pedido directo · sin registro")</label>
+          <input type="text" id="set-eyebrow-text" value="" placeholder="Déjalo vacío para quitarlo por completo">
+          <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Si lo dejas vacío, esa línea desaparecerá de la página.</p>
+        </div>
 
-        <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; background:rgba(255,0,85,0.06);">
+        <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
+          <label style="margin-top:0;">🔑 Clave API de ImgBB (para fotos rápidas)</label>
+          <input type="text" id="set-imgbb-key" value="" placeholder="Pega aquí tu clave de api.imgbb.com">
+          <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Las fotos que subas desde el panel se guardan en ImgBB (rápido) en vez de en Firestore (lento). Si se deja vacío, se guardan en Firestore como antes.</p>
+        </div>
+
+        <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; background:rgba(255,0,85,0.06); margin-bottom:16px;">
           <div class="status-toggle" style="border-color:#ff0055; margin:0;">
             <span style="font-weight:bold; color:white;">BLOQUEAR SERVICIO</span>
             <label class="switch">
@@ -1611,18 +1610,18 @@
           </div>
           <p style="font-size:11px; color:#ff0055; margin-top:10px; margin-bottom:0;">* Al activar esto, el sitio quedará totalmente inaccesible para todos.</p>
         </div>
+
+        <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; background:var(--card-hi);">
+          <span style="font-weight:bold; color:#ff0055;">🗑️ Zona de riesgo</span>
+          <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Borra todas las fotos guardadas en la base de datos (todos los productos se quedarán sin foto). Útil para empezar de cero y liberar espacio. Esta acción no se puede deshacer.</p>
+          <button class="btn-small" style="background:#ff0055; color:white; width:100%;" onclick="clearAllStoredImages()">🗑️ Borrar todas las imágenes guardadas</button>
+        </div>
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
         <span style="font-weight:bold; color:var(--cream);">📊 Exportar datos</span>
         <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Descarga un archivo Excel (.xlsx) con el menú completo, los pedidos y la configuración de la tienda.</p>
         <button class="btn-small" id="exportExcelBtn" style="width:100%;" onclick="exportAllDataToExcel()">⬇️ Exportar todo (Excel)</button>
-      </div>
-
-      <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
-        <span style="font-weight:bold; color:#ff0055;">🗑️ Zona de riesgo</span>
-        <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Borra todas las fotos guardadas en la base de datos (todos los productos se quedarán sin foto). Útil para empezar de cero y liberar espacio. Esta acción no se puede deshacer.</p>
-        <button class="btn-small" style="background:#ff0055; color:white; width:100%;" onclick="clearAllStoredImages()">🗑️ Borrar todas las imágenes guardadas</button>
       </div>
     </div>
   </div>
