@@ -2373,9 +2373,18 @@ async function markOrderAsSent(){
   document.getElementById("orderSavedHint").style.display = "block";
 
   try {
-    await db.collection("orders").add({
+    // The document ID is set to the order number itself (instead of an auto-generated ID) so a
+    // customer tracking their order can fetch this single document directly by its known number,
+    // without needing a broad "list" permission on the whole orders collection (see Firestore rules).
+    await db.collection("orders").doc(String(orderNumber)).set({
       orderNumber, items: orderItems, total, address: addr, phone, notes, status: "recibido",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Mirror ONLY the number + status into a separate public collection. This is what customer
+    // tracking reads from, so a visitor who knows/guesses an order number can only ever see its
+    // status — never the address, phone, or notes that live in the "orders" doc above.
+    await db.collection("orderStatus").doc(String(orderNumber)).set({
+      orderNumber, status: "recibido"
     });
     lastOrderNumber = orderNumber;
     document.getElementById("trackThisOrderBtn").style.display = "block";
@@ -2830,6 +2839,7 @@ function renderStatusPipeline(status){
 async function advanceOrderStatus(orderId, newStatus){
   try {
     await db.collection("orders").doc(orderId).update({ status: newStatus });
+    await db.collection("orderStatus").doc(orderId).update({ status: newStatus }); // keep the public tracking copy in sync
   } catch(e){
     console.error("No se pudo actualizar el estado del pedido:", e);
     showToast("⚠️", "No se pudo actualizar el pedido.", true);
@@ -2840,6 +2850,7 @@ async function cancelOrder(orderId){
   if(!confirm("¿Seguro que quieres cancelar este pedido?")) return;
   try {
     await db.collection("orders").doc(orderId).update({ status: "cancelado" });
+    await db.collection("orderStatus").doc(orderId).update({ status: "cancelado" }); // keep the public tracking copy in sync
   } catch(e){
     console.error("No se pudo cancelar el pedido:", e);
     showToast("⚠️", "No se pudo cancelar el pedido.", true);
@@ -2875,12 +2886,15 @@ async function searchOrderStatus(){
   if(trackUnsub){ trackUnsub(); trackUnsub = null; }
 
   try {
-    const snap = await db.collection("orders").where("orderNumber", "==", num).limit(1).get();
-    if(snap.empty){
+    // Reads from "orderStatus" — the small public collection that holds ONLY orderNumber +
+    // status — never the full "orders" doc (address, phone, notes stay admin-only).
+    const docRef = db.collection("orderStatus").doc(String(num));
+    const doc = await docRef.get();
+    if(!doc.exists){
       resultBox.innerHTML = `<p class="hint" style="color:var(--flame);">No se encontró ningún pedido con ese número.</p>`;
       return;
     }
-    trackUnsub = snap.docs[0].ref.onSnapshot(d => {
+    trackUnsub = docRef.onSnapshot(d => {
       if(!d.exists) return;
       const o = d.data();
       resultBox.innerHTML = `
