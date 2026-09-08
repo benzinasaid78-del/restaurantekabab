@@ -554,12 +554,21 @@
   }
   .call-btn:active{background:rgba(212,175,55,0.08);}
   .info-strip .call-link{
-    display:inline-block;
-    margin-top:8px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    padding:7px 13px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:999px;
     color:var(--gold);
-    font-size:13px;
-    text-decoration:none;
+    font-size:12.5px;
     font-weight:600;
+    text-decoration:none;
+  }
+  .info-strip .call-link:active{
+    background:var(--card-hi);
   }
   .confirm-check{
     width:64px; height:64px;
