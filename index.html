@@ -20,21 +20,19 @@
 <meta name="twitter:image" content="https://benzinasaid78-del.github.io/restaurantekabab/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    --bg:#0B0B0D;
-    --card:#17171B;
-    --card-hi:#202024;
-    --line:#2A2A30;
-    --flame:#F0453B;
-    --flame-dim:#b8332b;
-    --gold:#E9AE5C;
-    --cream:#F5F5F6;
-    --muted:#9A9AA2;
+    --bg:#1B1410;
+    --card:#241B15;
+    --card-hi:#2E2119;
+    --line:#3A2C21;
+    --flame:#D64933;
+    --flame-dim:#a83726;
+    --gold:#E3A857;
+    --cream:#F5EFE6;
+    --muted:#A89684;
     --green:#6B8F5C;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -50,75 +48,55 @@
   .display{font-family:'Bebas Neue', sans-serif; letter-spacing:0.5px;}
   .mono{font-family:'Space Mono', monospace;}
 
-  /* App bar (compact header: brand + search + settings) */
-  .appbar{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:16px 18px; background:var(--bg);
+  /* Header */
+    header{
+    padding:40px 20px 30px;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(214,73,51,0.35), transparent 55%),
+      var(--bg);
     border-bottom:1px solid var(--line);
-    position:sticky; top:0; z-index:16;
+    position:relative;
+    text-align: center;
   }
-  .appbar-brand{ display:flex; align-items:center; gap:9px; min-width:0; }
-  .appbar-icon{ width:30px; height:30px; flex-shrink:0; }
-  .appbar-icon-badge{
-    width:32px; height:32px; flex-shrink:0; border-radius:10px;
-    background:var(--flame); display:flex; align-items:center; justify-content:center;
-    font-size:16px;
+  header p.sub {
+    margin-left: auto;
+    margin-right: auto;
   }
-  .appbar-brand h1{
-    font-size:21px; line-height:1; color:var(--cream);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .appbar-brand h1 span{ color:var(--flame); }
-  .appbar-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
-  .appbar-icon-btn{
-    width:38px; height:38px; border-radius:50%;
-    background:var(--card); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--cream); font-size:16px; cursor:pointer;
-  }
-
-  .search-row{
-    display:none; align-items:center; gap:8px;
-    padding:10px 18px; background:var(--bg); border-bottom:1px solid var(--line);
-  }
-  .search-row.show{ display:flex; }
-  .search-row input{
-    flex:1; background:var(--card); border:1px solid var(--line); border-radius:10px;
-    padding:10px 14px; color:var(--cream); font-size:14px; font-family:inherit;
-  }
-  .search-row input::placeholder{ color:var(--muted); }
-
-  .info-strip{ padding:12px 20px 4px; }
-  .info-strip .eyebrow{ display:none; }
-  .info-strip p.sub{ display:none; }
-  .info-strip .eyebrow{
+  header .eyebrow{
     color:var(--gold);
-    font-size:11px;
-    letter-spacing:2.5px;
+    font-size:12px;
+    letter-spacing:3px;
     text-transform:uppercase;
     font-weight:600;
-    margin-bottom:5px;
+    margin-bottom:6px;
   }
-  .info-strip p.sub{
+  header h1{
+    font-size:44px;
+    line-height:0.95;
+    color:var(--cream);
+  }
+  header h1 span{color:var(--flame);}
+  header p.sub{
     color:var(--muted);
-    font-size:13.5px;
-    max-width:42ch;
+    font-size:14px;
+    margin-top:8px;
+    max-width:32ch;
   }
-  .info-strip .location-link{
+  header .location-link{
     display:inline-flex;
     align-items:center;
     gap:6px;
-    margin-top:12px;
-    padding:7px 13px;
+    margin-top:14px;
+    padding:8px 14px;
     background:var(--card);
     border:1px solid var(--line);
     border-radius:999px;
     color:var(--gold);
-    font-size:12.5px;
+    font-size:13px;
     font-weight:600;
     text-decoration:none;
   }
-  .info-strip .location-link:active{
+  header .location-link:active{
     background:var(--card-hi);
   }
 
@@ -128,7 +106,10 @@
     gap:8px;
     overflow-x:auto;
     padding:14px 20px;
-    background:var(--bg);
+    position:sticky;
+    top:0;
+    background:rgba(27,20,16,0.92);
+    backdrop-filter:blur(6px);
     z-index:10;
     border-bottom:1px solid var(--line);
     scrollbar-width:none;
@@ -162,17 +143,22 @@
   section.cat{margin-top:28px;}
   .menu-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
   @media (min-width: 768px) {
     .menu-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
+  @media (min-width: 1024px) {
+    .menu-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
   section.cat h2{
-    font-size:26px;
-    color:var(--cream);
+    font-size:30px;
+    color:var(--gold);
     margin-bottom:4px;
   }
   section.cat .count{
@@ -186,22 +172,27 @@
     background:var(--card);
     border:1px solid var(--line);
     border-radius:14px;
-    padding:10px;
+    padding:12px 12px 14px;
     margin-bottom:10px;
-    display:flex;
-    align-items:center;
-    gap:12px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    grid-template-areas:
+      "img img"
+      "info ctrl";
+    align-items:start;
+    gap:10px 10px;
     transition:border-color .15s ease;
     position:relative;
     min-width:0;
     max-width:100%;
   }
+  .item > [id^="ctrl-"]{grid-area:ctrl; align-self:center;}
   .item.in-cart{border-color:var(--flame-dim);}
   .featured-badge{
     position:absolute;
     top:-8px;
     left:6px;
-    font-size:26px;
+    font-size:32px;
     line-height:1;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)) drop-shadow(0 0 8px rgba(255,110,0,.65));
     z-index:2;
@@ -230,9 +221,10 @@
   .admin-soldout-row span{flex:1 1 200px; min-width:0; font-size:13px; color:var(--muted);}
   .admin-soldout-row .switch{flex-shrink:0;}
   .item-img-wrap{
-    height:96px;
-    width:120px;
-    flex-shrink:0;
+    grid-area:img;
+    height:130px;
+    width:100%;
+    max-width:100%;
     border-radius:12px;
     border:1px solid var(--line);
     background:#fff;
@@ -246,9 +238,9 @@
     transition:transform .15s ease, object-position .15s ease;
   }
   .item-img-skeleton{
-    height:96px;
-    width:120px;
-    flex-shrink:0;
+    grid-area:img;
+    height:130px;
+    width:100%;
     border-radius:12px;
     border:1px solid var(--line);
     background:linear-gradient(100deg, var(--card-hi) 30%, var(--card) 50%, var(--card-hi) 70%);
@@ -259,7 +251,7 @@
     0%{background-position:200% 0;}
     100%{background-position:-200% 0;}
   }
-  .item-info{flex:1; min-width:0;}
+  .item-info{grid-area:info; min-width:0;}
   .item-info .name{
     font-size:16px;
     font-weight:600;
@@ -327,42 +319,6 @@
   }
 
   /* Sticky cart bar */
-  .bottom-nav{
-    position:fixed;
-    left:0; right:0; bottom:0;
-    display:flex;
-    background:var(--card);
-    border-top:1px solid var(--line);
-    z-index:50;
-    padding-bottom:env(safe-area-inset-bottom, 0px);
-  }
-  .nav-item{
-    flex:1;
-    background:transparent;
-    border:none;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:3px;
-    padding:10px 4px 8px;
-    color:var(--muted);
-    font-family:'Work Sans';
-    font-size:11px;
-    font-weight:600;
-    cursor:pointer;
-  }
-  .nav-item.active{ color:var(--flame); }
-  .nav-icon{ font-size:21px; line-height:1; }
-  .nav-icon-wrap{ position:relative; display:inline-block; }
-  .nav-badge{
-    position:absolute; top:-6px; right:-10px;
-    background:var(--flame); color:var(--cream);
-    border-radius:999px; min-width:16px; height:16px; padding:0 4px;
-    font-size:10px; font-weight:700; font-family:'Space Mono';
-    display:flex; align-items:center; justify-content:center;
-  }
-
   .cart-bar{
     position:fixed;
     left:16px; right:16px; bottom:16px;
@@ -432,7 +388,6 @@
     margin-bottom:2px;
   }
   .sheet .subhead{color:var(--muted); font-size:12px; margin-bottom:16px;}
-  .subhead{color:var(--muted); font-size:12.5px;}
   .subhead-row{
     display:flex;
     align-items:center;
@@ -553,22 +508,13 @@
     text-decoration:none;
   }
   .call-btn:active{background:rgba(212,175,55,0.08);}
-  .info-strip .call-link{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    margin-top:10px;
-    padding:7px 13px;
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:999px;
+  header .call-link{
+    display:inline-block;
+    margin-top:8px;
     color:var(--gold);
-    font-size:12.5px;
-    font-weight:600;
+    font-size:13px;
     text-decoration:none;
-  }
-  .info-strip .call-link:active{
-    background:var(--card-hi);
+    font-weight:600;
   }
   .confirm-check{
     width:64px; height:64px;
@@ -707,21 +653,22 @@
   }
   /* Admin Panel Styles */
   .admin-btn {
-    position: relative;
-    background: var(--card);
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--card-hi);
     border: 1px solid var(--line);
     color: var(--muted);
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    font-size: 17px;
+    font-size: 20px;
     cursor: pointer;
-    z-index: 5;
+    z-index: 100;
     display: none; /* Hidden by default */
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    flex-shrink: 0;
   }
   .admin-btn:hover {
     background: var(--gold);
@@ -1305,45 +1252,31 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <div class="lock-overlay" id="lockOverlay">
   <h1 class="display" id="lockTitle" style="color:#ff0055; font-size:50px; cursor:default; user-select:none;">SERVICIO SUSPENDIDO</h1>
   <p style="color:white; margin-top:10px;">Este sitio no está disponible actualmente.</p>
 </div>
 
-<div id="view-inicio">
-<div class="appbar">
-  <div class="appbar-brand">
-    <span class="appbar-icon-badge">🍴</span>
-    <img id="restLogo" src="" alt="" style="height:30px; width:auto; display:none; border-radius:6px;">
+<header>
+  <div class="eyebrow" id="eyebrowText">Pedido directo · sin registro</div>
+  <div class="title-row" style="display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;">
+    <img id="restLogo" src="" alt="" style="height:64px; width:auto; display:none;">
     <h1 class="display" id="mainTitle" style="cursor: default; user-select: none; margin:0;">Doner Kebab <span>Lahori</span></h1>
   </div>
-  <div class="appbar-actions">
-    <button class="appbar-icon-btn" onclick="toggleSearch()" aria-label="Buscar">🔍</button>
-    <button class="admin-btn" onclick="toggleAdmin()" title="لوحة الإدارة">⚙️<span class="notif-dot" id="adminNotifDot" style="display:none;"></span></button>
-  </div>
-</div>
-
-<div class="search-row" id="searchRow">
-  <input type="text" id="searchInput" placeholder="Buscar platos..." oninput="onSearchInput(this.value)">
-  <button class="appbar-icon-btn" onclick="toggleSearch()" aria-label="Cerrar búsqueda">✕</button>
-</div>
-
-<div class="info-strip">
-  <div class="eyebrow" id="eyebrowText">Pedido directo · sin registro</div>
   <p class="sub">Elige tus platos favoritos y recibe tu pedido en casa en pocos minutos.</p>
   <a class="location-link" href="https://maps.app.goo.gl/5pTiCQBxJ5UaX7ip9?g_st=aw" target="_blank" rel="noopener noreferrer">📍 Ver ubicación en Google Maps</a>
   <br>
   <a class="call-link" href="#" onclick="callRestaurant(); return false;">📞 Llamar ahora</a>
-</div>
+</header>
 
 <nav class="cats" id="catNav"></nav>
 
 <main id="menu"></main>
-<div class="no-results" id="noSearchResults" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
-  <div style="font-size:34px; margin-bottom:10px;">🔍</div>
-  No se encontraron platos para tu búsqueda.
-</div>
 
 <footer class="store-footer">
   <div class="social-icons">
@@ -1375,24 +1308,30 @@
     </a>
   </div>
   <p class="footer-note">Síguenos en nuestras redes para más información</p>
+  <button class="track-order-btn" onclick="openTrackOrder()">📦 Seguir mi pedido</button>
   <p class="privacy-note">
     <b>Privacidad:</b> los datos que nos facilitas al hacer un pedido (dirección, teléfono, notas) se usan únicamente para gestionar y entregar ese pedido, y se envían por WhatsApp para su procesamiento. No compartimos tus datos con terceros con fines comerciales. Puedes solicitar en cualquier momento el acceso, la rectificación o la eliminación de tus datos contactándonos por WhatsApp.
   </p>
 </footer>
-</div>
 
-<div id="view-pedidos" style="display:none; padding:20px 20px 40px;">
-  <h3 class="display" style="font-size:26px; color:var(--gold);">Seguir mi pedido</h3>
-  <div class="subhead" style="text-align:left; margin-bottom:0;">Introduce tu número de pedido para ver en qué punto está</div>
-  <div style="display:flex; gap:8px; margin:18px 0 8px;">
-    <input type="text" id="trackOrderInput" placeholder="Ej: 23" inputmode="numeric" style="flex:1; margin:0;">
-    <button class="send-btn" style="width:auto; padding:0 22px; margin:0;" onclick="searchOrderStatus()">Buscar</button>
+<div class="overlay" id="trackOverlay" onclick="if(event.target===this) closeTrackOrder()">
+  <div class="sheet" style="text-align:center;">
+    <button class="close-btn" onclick="closeTrackOrder()">✕</button>
+    <div class="sheet-handle"></div>
+    <h3 class="display">Seguir mi pedido</h3>
+    <div class="subhead">Introduce tu número de pedido para ver en qué punto está</div>
+    <div style="display:flex; gap:8px; margin:18px 0 8px;">
+      <input type="text" id="trackOrderInput" placeholder="Ej: 23" inputmode="numeric" style="flex:1; margin:0;">
+      <button class="send-btn" style="width:auto; padding:0 22px; margin:0;" onclick="searchOrderStatus()">Buscar</button>
+    </div>
+    <div id="trackResult"></div>
   </div>
-  <div id="trackResult"></div>
 </div>
 
 
 <div class="app-toast-wrap" id="appToastWrap"></div>
+
+<button class="admin-btn" onclick="toggleAdmin()" title="لوحة الإدارة">⚙️<span class="notif-dot" id="adminNotifDot" style="display:none;"></span></button>
 
 <div class="admin-panel" id="adminPanel">
   <div class="admin-header">
@@ -1598,6 +1537,11 @@
   </div>
 </div>
 
+<button class="cart-bar" id="cartBar" onclick="openSheet()">
+  <span class="left"><span class="badge" id="cartCount">0</span> Ver pedido</span>
+  <span class="total" id="cartTotal">0,00€</span>
+</button>
+
 <div class="closed-notice" id="closedNotice">
   <div class="icon">🌙</div>
   <h2 class="display">Cerrado Temporalmente</h2>
@@ -1605,31 +1549,34 @@
   <button class="btn-small" style="margin-top:20px; padding:10px 30px; background:var(--gold); color:var(--bg); border:none;" onclick="document.getElementById('closedNotice').classList.remove('show')">Ver Menú sin pedir</button>
 </div>
 
-<div id="view-carrito" style="display:none; padding:20px 20px 40px;">
-  <h3 class="display" style="font-size:26px; color:var(--gold);">Tu pedido</h3>
-  <div class="subhead-row">
-    <div class="subhead" style="text-align:left; margin-bottom:0;">Revisa antes de enviar</div>
-    <button class="clear-cart-btn" onclick="clearCart()">🗑️ Vaciar carrito</button>
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeSheet()">
+  <div class="sheet">
+    <button class="close-btn" onclick="closeSheet()">✕</button>
+    <div class="sheet-handle"></div>
+    <h3 class="display">Tu pedido</h3>
+    <div class="subhead-row">
+      <div class="subhead">Revisa antes de enviar</div>
+      <button class="clear-cart-btn" onclick="clearCart()">🗑️ Vaciar carrito</button>
+    </div>
+
+    <div class="receipt" id="receipt"></div>
+
+    <label for="addr">Dirección de entrega *</label>
+    <input id="addr" type="text" placeholder="Calle, número, piso, ciudad">
+
+    <label for="phone">Teléfono de contacto</label>
+    <input id="phone" type="tel" placeholder="Opcional">
+
+    <label for="notes">Notas del pedido</label>
+    <textarea id="notes" placeholder="Sin cebolla, timbre roto, etc. (opcional)"></textarea>
+
+    <button class="send-btn" id="sendBtn" onclick="sendOrder()">📲 Enviar pedido por WhatsApp</button>
+    <button class="call-btn" onclick="callRestaurant()">📞 Llamar para pedir</button>
+    <div class="hint">Se abrirá WhatsApp con tu pedido ya escrito, listo para enviar</div>
   </div>
-
-  <div class="receipt" id="receipt"></div>
-
-  <label for="addr">Dirección de entrega *</label>
-  <input id="addr" type="text" placeholder="Calle, número, piso, ciudad">
-
-  <label for="phone">Teléfono de contacto</label>
-  <input id="phone" type="tel" placeholder="Opcional">
-
-  <label for="notes">Notas del pedido</label>
-  <textarea id="notes" placeholder="Sin cebolla, timbre roto, etc. (opcional)"></textarea>
-
-  <button class="send-btn" id="sendBtn" onclick="sendOrder()">📲 Enviar pedido por WhatsApp</button>
-  <button class="call-btn" onclick="callRestaurant()">📞 Llamar para pedir</button>
-  <div class="hint">Se abrirá WhatsApp con tu pedido ya escrito, listo para enviar</div>
 </div>
 
 <div class="overlay" id="variantOverlay" onclick="if(event.target===this) closeVariantSheet(false)">
-
   <div class="sheet">
     <button class="close-btn" onclick="closeVariantSheet(false)">✕</button>
     <div class="sheet-handle"></div>
@@ -1679,23 +1626,6 @@
   </div>
 </div>
 
-<nav class="bottom-nav" id="bottomNav">
-  <button class="nav-item active" data-view="inicio" onclick="showView('inicio')">
-    <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
-  </button>
-  <button class="nav-item" data-view="pedidos" onclick="showView('pedidos')">
-    <span class="nav-icon">📋</span><span class="nav-label">Pedidos</span>
-  </button>
-  <button class="nav-item" data-view="carrito" onclick="showView('carrito')">
-    <span class="nav-icon-wrap"><span class="nav-icon">🛒</span><span class="nav-badge" id="navCartBadge" style="display:none;">0</span></span>
-    <span class="nav-label">Carrito</span>
-  </button>
-</nav>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // Records when the loading screen first appeared, so we can guarantee it stays
 // visible for a minimum amount of time (see MIN_LOADING_SCREEN_MS below) even if
@@ -1995,51 +1925,18 @@ function renderNav(){
   });
 }
 
-let searchQuery = "";
-function toggleSearch(){
-  const row = document.getElementById("searchRow");
-  const input = document.getElementById("searchInput");
-  const isOpen = row.classList.contains("show");
-  if(isOpen){
-    row.classList.remove("show");
-    input.value = "";
-    searchQuery = "";
-    renderMenu();
-  } else {
-    row.classList.add("show");
-    input.focus();
-  }
-}
-function onSearchInput(val){
-  searchQuery = val;
-  renderMenu();
-}
-
 function renderMenu(){
   const main = document.getElementById("menu");
-  const noResults = document.getElementById("noSearchResults");
-  const catNav = document.getElementById("catNav");
   main.innerHTML = "";
-  const query = (typeof searchQuery !== "undefined" ? searchQuery : "").trim().toLowerCase();
-  const isSearching = query.length > 0;
-  if(catNav) catNav.style.display = isSearching ? "none" : "";
-  let anyMatch = false;
-
   menuData.forEach((g, idx) => {
-    const items = isSearching
-      ? g.items.filter(it => it.name.toLowerCase().includes(query) || (it.desc && it.desc.toLowerCase().includes(query)))
-      : g.items;
-    if(items.length === 0) return;
-    anyMatch = true;
-
     const section = document.createElement("section");
     section.className = "cat";
     section.id = "cat-" + idx;
-    section.innerHTML = `<h2 class="display">${g.cat}</h2><span class="count">${items.length} opciones</span>`;
+    section.innerHTML = `<h2 class="display">${g.cat}</h2><span class="count">${g.items.length} opciones</span>`;
     const grid = document.createElement("div");
     grid.className = "menu-grid";
     
-    items.forEach(it => {
+    g.items.forEach(it => {
       const row = document.createElement("div");
       row.className = "item" + (it.soldOut ? " sold-out" : "");
       row.id = "row-" + it.id;
@@ -2065,10 +1962,8 @@ function renderMenu(){
     });
     section.appendChild(grid);
     main.appendChild(section);
-    items.forEach(it => renderControl(it));
+    g.items.forEach(it => renderControl(it));
   });
-
-  if(noResults) noResults.style.display = (isSearching && !anyMatch) ? "block" : "none";
 }
 
 function renderControl(it){
@@ -2240,12 +2135,11 @@ function cartTotals(){
 }
 
 function updateCartBar(){
-  const {count} = cartTotals();
-  const badge = document.getElementById("navCartBadge");
-  if(badge){
-    badge.textContent = count;
-    badge.style.display = count > 0 ? "flex" : "none";
-  }
+  const {count, total} = cartTotals();
+  const bar = document.getElementById("cartBar");
+  document.getElementById("cartCount").textContent = count;
+  document.getElementById("cartTotal").textContent = fmt(total);
+  bar.classList.toggle("show", count > 0);
 }
 
 function renderReceipt(){
@@ -2278,28 +2172,12 @@ function renderReceipt(){
   document.getElementById("sendBtn").disabled = false;
 }
 
-// Switches between the three bottom-nav pages (Inicio / Pedidos / Carrito).
-// Kept as a single small router so every other part of the code (cart button,
-// track-order links, WhatsApp confirmation, etc.) can just call showView(...)
-// instead of juggling overlay show/hide classes.
-function showView(name){
-  ["inicio", "pedidos", "carrito"].forEach(v => {
-    const el = document.getElementById("view-" + v);
-    if(el) el.style.display = (v === name) ? "" : "none";
-  });
-  document.querySelectorAll(".bottom-nav .nav-item").forEach(el => {
-    el.classList.toggle("active", el.dataset.view === name);
-  });
-  if(name === "carrito") renderReceipt();
-  if(name === "inicio") window.scrollTo({top: 0, behavior: "instant"});
-}
-
 function openSheet(){
-  showView("carrito");
+  document.getElementById("overlay").classList.add("show");
   renderReceipt();
 }
 function closeSheet(){
-  showView("inicio");
+  document.getElementById("overlay").classList.remove("show");
 }
 
 // Resets every item/variant quantity back to 0 in one tap, instead of the person having
@@ -2373,9 +2251,18 @@ async function markOrderAsSent(){
   document.getElementById("orderSavedHint").style.display = "block";
 
   try {
-    await db.collection("orders").add({
+    // The document ID is set to the order number itself (instead of an auto-generated ID) so a
+    // customer tracking their order can fetch this single document directly by its known number,
+    // without needing a broad "list" permission on the whole orders collection (see Firestore rules).
+    await db.collection("orders").doc(String(orderNumber)).set({
       orderNumber, items: orderItems, total, address: addr, phone, notes, status: "recibido",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Mirror ONLY the number + status into a separate public collection. This is what customer
+    // tracking reads from, so a visitor who knows/guesses an order number can only ever see its
+    // status — never the address, phone, or notes that live in the "orders" doc above.
+    await db.collection("orderStatus").doc(String(orderNumber)).set({
+      orderNumber, status: "recibido"
     });
     lastOrderNumber = orderNumber;
     document.getElementById("trackThisOrderBtn").style.display = "block";
@@ -2662,6 +2549,7 @@ function isStoreOpen(){
 
 function updateStatusUI() {
   const notice = document.getElementById('closedNotice');
+  const cartBar = document.getElementById('cartBar');
   const lock = document.getElementById('lockOverlay');
 
   if (IS_LOCKED) {
@@ -2675,8 +2563,7 @@ function updateStatusUI() {
 
   if (!effectiveOpen) {
     notice.classList.add('show');
-    const badge = document.getElementById('navCartBadge');
-    if(badge) badge.style.display = 'none';
+    cartBar.classList.remove('show');
   } else {
     notice.classList.remove('show');
     updateCartBar();
@@ -2723,32 +2610,32 @@ function unlockAudio(){
   } catch(e){}
 }
 
-// Plays a longer, more insistent alert (~3.5s, repeats the chime 3 times) using a harsher
-// square wave instead of a soft sine tone — cuts through noisy kitchen background sound much
-// better and gives the cook enough time to notice it even if they're not near the screen.
+// Plays a spoken alert ("Tienes nuevo pedido") using the browser's built-in text-to-speech,
+// repeated a few times so it's hard to miss even in a noisy kitchen and even if the cook
+// isn't looking at the screen.
 function playOrderAlert(){
   try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    const now = audioCtx.currentTime;
-    const cycleDuration = 1.15; // one "ding-dong" + gap before repeating
-    const cycles = 3;
-    for(let c = 0; c < cycles; c++){
-      const base = now + c * cycleDuration;
-      [{freq:880, start:0, dur:0.32}, {freq:1175, start:0.30, dur:0.42}].forEach(tone => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "square";
-        osc.frequency.value = tone.freq;
-        gain.gain.setValueAtTime(0, base + tone.start);
-        gain.gain.linearRampToValueAtTime(0.35, base + tone.start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, base + tone.start + tone.dur);
-        osc.connect(gain).connect(audioCtx.destination);
-        osc.start(base + tone.start);
-        osc.stop(base + tone.start + tone.dur + 0.05);
-      });
-    }
-  } catch(e){ console.error("No se pudo reproducir el sonido de alerta:", e); }
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel(); // clear any queued utterances so repeats don't pile up across quick orders
+
+    const repeats = 3;
+    // Speak one utterance at a time (next one only starts once the previous ends) instead of
+    // queueing all 3 at once — queueing them together silently produces no sound on some
+    // Android Chrome versions right after cancel(). A short delay before the first one avoids
+    // the same cancel()+speak() race.
+    const speakOne = (i) => {
+      if (i >= repeats) return;
+      const utter = new SpeechSynthesisUtterance("Tienes nuevo pedido");
+      utter.lang = "es-ES";
+      utter.rate = 1;
+      utter.pitch = 1;
+      utter.volume = 1;
+      utter.onend = () => speakOne(i + 1);
+      utter.onerror = () => speakOne(i + 1);
+      window.speechSynthesis.speak(utter);
+    };
+    setTimeout(() => speakOne(0), 80);
+  } catch(e){ console.error("No se pudo reproducir el aviso de voz:", e); }
 }
 
 function flashOrdersBadge(){
@@ -2830,6 +2717,7 @@ function renderStatusPipeline(status){
 async function advanceOrderStatus(orderId, newStatus){
   try {
     await db.collection("orders").doc(orderId).update({ status: newStatus });
+    await db.collection("orderStatus").doc(orderId).update({ status: newStatus }); // keep the public tracking copy in sync
   } catch(e){
     console.error("No se pudo actualizar el estado del pedido:", e);
     showToast("⚠️", "No se pudo actualizar el pedido.", true);
@@ -2840,6 +2728,7 @@ async function cancelOrder(orderId){
   if(!confirm("¿Seguro que quieres cancelar este pedido?")) return;
   try {
     await db.collection("orders").doc(orderId).update({ status: "cancelado" });
+    await db.collection("orderStatus").doc(orderId).update({ status: "cancelado" }); // keep the public tracking copy in sync
   } catch(e){
     console.error("No se pudo cancelar el pedido:", e);
     showToast("⚠️", "No se pudo cancelar el pedido.", true);
@@ -2852,12 +2741,12 @@ let trackUnsub = null;
 function openTrackOrder(prefillNumber){
   document.getElementById("trackOrderInput").value = prefillNumber || "";
   document.getElementById("trackResult").innerHTML = "";
-  showView("pedidos");
+  document.getElementById("trackOverlay").classList.add("show");
   if(prefillNumber) searchOrderStatus();
 }
 
 function closeTrackOrder(){
-  showView("inicio");
+  document.getElementById("trackOverlay").classList.remove("show");
   if(trackUnsub){ trackUnsub(); trackUnsub = null; }
 }
 
@@ -2875,12 +2764,15 @@ async function searchOrderStatus(){
   if(trackUnsub){ trackUnsub(); trackUnsub = null; }
 
   try {
-    const snap = await db.collection("orders").where("orderNumber", "==", num).limit(1).get();
-    if(snap.empty){
+    // Reads from "orderStatus" — the small public collection that holds ONLY orderNumber +
+    // status — never the full "orders" doc (address, phone, notes stay admin-only).
+    const docRef = db.collection("orderStatus").doc(String(num));
+    const doc = await docRef.get();
+    if(!doc.exists){
       resultBox.innerHTML = `<p class="hint" style="color:var(--flame);">No se encontró ningún pedido con ese número.</p>`;
       return;
     }
-    trackUnsub = snap.docs[0].ref.onSnapshot(d => {
+    trackUnsub = docRef.onSnapshot(d => {
       if(!d.exists) return;
       const o = d.data();
       resultBox.innerHTML = `
