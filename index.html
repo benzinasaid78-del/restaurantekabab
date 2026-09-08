@@ -53,7 +53,7 @@
   /* App bar (compact header: brand + search + settings) */
   .appbar{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:16px 18px; background:var(--bg);
+    padding:16px 20px; background:var(--bg);
     border-bottom:1px solid var(--line);
     position:sticky; top:0; z-index:16;
   }
@@ -1314,7 +1314,6 @@
 <div id="view-inicio">
 <div class="appbar">
   <div class="appbar-brand">
-    <span class="appbar-icon-badge">🍴</span>
     <img id="restLogo" src="" alt="" style="height:30px; width:auto; display:none; border-radius:6px;">
     <h1 class="display" id="mainTitle" style="cursor: default; user-select: none; margin:0;">Doner Kebab <span>Lahori</span></h1>
   </div>
@@ -2326,6 +2325,16 @@ async function getNextOrderNumber(){
 
 let pendingOrder = null; // holds everything needed to actually record the order once WhatsApp is opened
 
+// Local date as "YYYY-MM-DD", used to mark which day an order was placed on so public order
+// tracking (searchOrderStatus) can stop showing a number once that day is over.
+function getLocalDateKey(d){
+  d = d || new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function showOrderConfirmation(orderNumber, addr, total){
   document.getElementById("confirmOrderNumber").textContent = "#" + orderNumber;
 
@@ -2383,8 +2392,11 @@ async function markOrderAsSent(){
     // Mirror ONLY the number + status into a separate public collection. This is what customer
     // tracking reads from, so a visitor who knows/guesses an order number can only ever see its
     // status — never the address, phone, or notes that live in the "orders" doc above.
+    // "dateKey" (local YYYY-MM-DD) is used by searchOrderStatus so tracking only works for
+    // today's orders — once the day changes, old order numbers stop being trackable publicly,
+    // even though the full order stays in the admin's "orders" history forever.
     await db.collection("orderStatus").doc(String(orderNumber)).set({
-      orderNumber, status: "recibido"
+      orderNumber, status: "recibido", dateKey: getLocalDateKey()
     });
     lastOrderNumber = orderNumber;
     document.getElementById("trackThisOrderBtn").style.display = "block";
@@ -2890,7 +2902,10 @@ async function searchOrderStatus(){
     // status — never the full "orders" doc (address, phone, notes stay admin-only).
     const docRef = db.collection("orderStatus").doc(String(num));
     const doc = await docRef.get();
-    if(!doc.exists){
+    // Also treat yesterday-or-older orders as "not found" for public tracking — the number
+    // still exists in the admin's history, it's just no longer looked up by customers, so an
+    // old number from days ago can't be reused to mix up someone else's current order.
+    if(!doc.exists || (doc.data().dateKey && doc.data().dateKey !== getLocalDateKey())){
       resultBox.innerHTML = `<p class="hint" style="color:var(--flame);">No se encontró ningún pedido con ese número.</p>`;
       return;
     }
