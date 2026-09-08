@@ -147,6 +147,17 @@
     scrollbar-width:none;
   }
   nav.cats::-webkit-scrollbar{display:none;}
+  .cats-wrap{
+    position:relative;
+  }
+  .cats-wrap::after{
+    content:"";
+    position:absolute;
+    top:0; right:0; bottom:0;
+    width:28px;
+    background:linear-gradient(to right, transparent, var(--bg));
+    pointer-events:none;
+  }
   nav.cats button{
     flex:0 0 auto;
     background:var(--card);
@@ -710,14 +721,33 @@
   }
   .privacy-note{
     margin-top:16px;
-    padding-top:16px;
+    padding-top:12px;
     border-top:1px solid var(--line);
-    font-size:11.5px;
-    line-height:1.6;
-    color:var(--muted);
     max-width:480px;
     margin-left:auto;
     margin-right:auto;
+    text-align:left;
+  }
+  .privacy-note summary{
+    font-size:12px;
+    color:var(--muted);
+    cursor:pointer;
+    text-align:center;
+    list-style:none;
+    user-select:none;
+  }
+  .privacy-note summary::-webkit-details-marker{ display:none; }
+  .privacy-note summary::after{
+    content:" ▾";
+  }
+  .privacy-note[open] summary::after{
+    content:" ▴";
+  }
+  .privacy-note p{
+    margin-top:8px;
+    font-size:11.5px;
+    line-height:1.6;
+    color:var(--muted);
   }
   /* Admin Panel Styles */
   .admin-btn {
@@ -1333,7 +1363,7 @@
   </div>
   <div class="appbar-actions">
     <button class="appbar-icon-btn" onclick="toggleSearch()" aria-label="Buscar"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></button>
-    <button class="admin-btn" onclick="toggleAdmin()" title="لوحة الإدارة"><span class="icon" id="adminBtnIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></span><span class="notif-dot" id="adminNotifDot" style="display:none;"></span></button>
+    <button class="admin-btn" onclick="toggleAdmin()" title="لوحة الإدارة"><span class="icon" id="adminBtnIcon" style="font-size:18px; line-height:1;">⚙️</span><span class="notif-dot" id="adminNotifDot" style="display:none;"></span></button>
   </div>
 </div>
 
@@ -1347,7 +1377,9 @@
   <p class="sub">Elige tus platos favoritos y recibe tu pedido en casa en pocos minutos.</p>
 </div>
 
+<div class="cats-wrap">
 <nav class="cats" id="catNav"></nav>
+</div>
 
 <main id="menu"></main>
 <div class="no-results" id="noSearchResults" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
@@ -1390,9 +1422,10 @@
     </a>
   </div>
   <p class="footer-note">Síguenos en nuestras redes para más información</p>
-  <p class="privacy-note">
-    <b>Privacidad:</b> los datos que nos facilitas al hacer un pedido (dirección, teléfono, notas) se usan únicamente para gestionar y entregar ese pedido, y se envían por WhatsApp para su procesamiento. No compartimos tus datos con terceros con fines comerciales. Puedes solicitar en cualquier momento el acceso, la rectificación o la eliminación de tus datos contactándonos por WhatsApp.
-  </p>
+  <details class="privacy-note">
+    <summary>Privacidad y protección de datos</summary>
+    <p><b>Privacidad:</b> los datos que nos facilitas al hacer un pedido (dirección, teléfono, notas) se usan únicamente para gestionar y entregar ese pedido, y se envían por WhatsApp para su procesamiento. No compartimos tus datos con terceros con fines comerciales. Puedes solicitar en cualquier momento el acceso, la rectificación o la eliminación de tus datos contactándonos por WhatsApp.</p>
+  </details>
 </footer>
 </div>
 
