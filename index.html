@@ -2029,6 +2029,20 @@ async function saveToFirestore(){
 
 function fmt(n){ return n.toFixed(2).replace(".", ",") + "€"; }
 
+// Escapes any customer-supplied text (address, phone, notes, item names) before it is ever
+// placed inside an innerHTML template. Without this, a malicious value typed into a checkout
+// field (e.g. an <img onerror=...> payload) would execute as real code the moment the admin
+// opens the Pedidos panel — this converts it into inert, harmless text instead.
+function escapeHtml(str){
+  if(str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderNav(){
   const nav = document.getElementById("catNav");
   nav.innerHTML = "";
@@ -2994,7 +3008,7 @@ function renderOrdersList(snap, newlyAdded){
     const when = o.createdAt && o.createdAt.toDate
       ? o.createdAt.toDate().toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})
       : '—';
-    const itemsHtml = (o.items || []).map(it => `${it.qty}x ${it.name}`).join('<br>');
+    const itemsHtml = (o.items || []).map(it => `${it.qty}x ${escapeHtml(it.name)}`).join('<br>');
     const card = document.createElement('div');
     const isNew = newlyAdded.includes(id);
     card.className = 'order-card' + (isFinal ? ' done' : '') + (isNew ? ' just-added' : '');
@@ -3005,9 +3019,9 @@ function renderOrdersList(snap, newlyAdded){
       </div>
       <div class="order-items">${itemsHtml}</div>
       <div class="order-meta">
-        📍 <b>${o.address || '—'}</b><br>
-        ${o.phone ? `📞 <b>${o.phone}</b><br>` : ""}
-        ${o.notes ? `📝 ${o.notes}` : ""}
+        📍 <b>${escapeHtml(o.address) || '—'}</b><br>
+        ${o.phone ? `📞 <b>${escapeHtml(o.phone)}</b><br>` : ""}
+        ${o.notes ? `📝 ${escapeHtml(o.notes)}` : ""}
       </div>
       ${renderStatusPipeline(status)}
       <div class="order-status-actions">
