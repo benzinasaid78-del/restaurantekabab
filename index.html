@@ -1412,7 +1412,7 @@
         <div class="loading-bar-fill" id="loadingBarFill"></div>
       </div>
     </div>
-    <div class="loading-tagline"><span class="flame-ico">🔥</span> Los mejores sabores, preparados solo para ti.</div>
+    <div class="loading-tagline"><span class="flame-ico"><span class='msi' style='font-size:16px;'>local_fire_department</span></span> Los mejores sabores, preparados solo para ti.</div>
   </div>
 </div>
 
@@ -1436,7 +1436,7 @@
 
 <div class="search-row" id="searchRow">
   <input type="text" id="searchInput" placeholder="Buscar platos..." oninput="onSearchInput(this.value)">
-  <button class="appbar-icon-btn" onclick="toggleSearch()" aria-label="Cerrar búsqueda">✕</button>
+  <button class="appbar-icon-btn" onclick="toggleSearch()" aria-label="Cerrar búsqueda"><span class='msi' style='font-size:16px;'>close</span></button>
 </div>
 
 <div class="info-strip">
@@ -1450,7 +1450,7 @@
 
 <main id="menu"></main>
 <div class="no-results" id="noSearchResults" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
-  <div style="font-size:34px; margin-bottom:10px;">🔍</div>
+  <div style="font-size:34px; margin-bottom:10px;"><span class='msi' style='font-size:16px;'>search</span></div>
   No se encontraron platos para tu búsqueda.
 </div>
 
@@ -1512,13 +1512,13 @@
 <div class="admin-panel" id="adminPanel">
   <div class="admin-header">
     <h3 class="display">Panel de Control</h3>
-    <button class="admin-close" onclick="toggleAdmin()">✕</button>
+    <button class="admin-close" onclick="toggleAdmin()"><span class='msi' style='font-size:16px;'>close</span></button>
   </div>
   <div class="admin-tabs">
-    <div class="admin-tab active" onclick="switchTab('menu')">🍽️ Menú</div>
-    <div class="admin-tab" onclick="switchTab('orders')">📋 Pedidos<span class="notif-dot" id="ordersTabNotifDot" style="display:none;"></span></div>
-    <div class="admin-tab" onclick="switchTab('stats')">📊 Stats</div>
-    <div class="admin-tab" onclick="switchTab('settings')">⚙️ Ajustes</div>
+    <div class="admin-tab active" onclick="switchTab('menu')"><span class='msi' style='font-size:16px;'>restaurant_menu</span> Menú</div>
+    <div class="admin-tab" onclick="switchTab('orders')"><span class='msi' style='font-size:16px;'>receipt_long</span> Pedidos<span class="notif-dot" id="ordersTabNotifDot" style="display:none;"></span></div>
+    <div class="admin-tab" onclick="switchTab('stats')"><span class='msi' style='font-size:16px;'>bar_chart</span> Stats</div>
+    <div class="admin-tab" onclick="switchTab('settings')"><span class='msi' style='font-size:16px;'>settings</span> Ajustes</div>
   </div>
   
   <div class="admin-content">
@@ -1536,8 +1536,8 @@
           <span style="width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block;"></span> EN VIVO
         </span>
         <div style="display:flex; gap:6px;">
-          <button class="btn-small" onclick="playOrderAlert()" title="Probar sonido">🔔</button>
-          <button class="btn-small" onclick="loadOrdersList()">🔄 Actualizar</button>
+          <button class="btn-small" onclick="playOrderAlert()" title="Probar sonido"><span class='msi' style='font-size:16px;'>notifications</span></button>
+          <button class="btn-small" onclick="loadOrdersList()"><span class='msi' style='font-size:16px;'>refresh</span> Actualizar</button>
         </div>
       </div>
       <div id="ordersListContent"><p class="hint">Cargando pedidos…</p></div>
@@ -1590,13 +1590,13 @@
       <input type="text" id="set-wa-num" value="">
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🛒 Pedido mínimo (€)</label>
+        <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>shopping_cart</span> Pedido mínimo (€)</label>
         <input type="number" id="set-min-order" value="0" min="0" step="0.5">
         <p style="font-size:11px; color:var(--muted); margin-top:10px; margin-bottom:0;">* Deja en 0 para desactivar. Si lo activas, el cliente no podrá enviar el pedido hasta alcanzar este importe.</p>
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🎁 Códigos de descuento</label>
+        <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>card_giftcard</span> Códigos de descuento</label>
         <div id="discountCodesEditor"></div>
         <button class="btn-small btn-add" style="margin-top:10px; width:100%;" onclick="addDiscountCode()">+ Añadir código</button>
         <p style="font-size:11px; color:var(--muted); margin-top:10px; margin-bottom:0;">* El cliente lo introduce en el carrito y se resta ese importe fijo del total. Usa el interruptor para activar/desactivar un código sin borrarlo.</p>
@@ -1620,10 +1620,10 @@
       <label>Enlace de Google Maps</label>
       <input type="text" id="set-maps-url" value="">
 
-      <p style="font-size:11px; color:var(--muted); margin-top:14px;">🔒 El acceso a este panel ahora se gestiona con correo y contraseña (Firebase Authentication), no con una contraseña escrita aquí.</p>
+      <p style="font-size:11px; color:var(--muted); margin-top:14px;"><span class='msi' style='font-size:13px;'>lock</span> El acceso a este panel ahora se gestiona con correo y contraseña (Firebase Authentication), no con una contraseña escrita aquí.</p>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🔗 Enlaces de redes sociales</label>
+        <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>link</span> Enlaces de redes sociales</label>
         <label style="font-weight:normal; font-size:12px; margin-top:10px;">Facebook</label>
         <input type="text" id="set-fb-url" value="" placeholder="https://facebook.com/turestaurante">
         <label style="font-weight:normal; font-size:12px;">Instagram</label>
@@ -1634,42 +1634,42 @@
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🖼️ Logo del restaurante</label>
+        <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>image</span> Logo del restaurante</label>
         <div class="img-preview-container">
           <img src="" class="img-preview-mini" id="logoPreview" style="display:none;">
           <label class="file-input-label">
-            📸 Cambiar Logo
+            <span class='msi' style='font-size:16px;'>photo_camera</span> Cambiar Logo
             <input type="file" hidden accept="image/*" onchange="handleLogoUpload(event)">
           </label>
-          <button class="btn-icon" id="removeLogoBtn" style="display:none;" onclick="removeLogo()">✕</button>
+          <button class="btn-icon" id="removeLogoBtn" style="display:none;" onclick="removeLogo()"><span class='msi' style='font-size:16px;'>close</span></button>
         </div>
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-        <label style="margin-top:0;">🌆 Imagen de pantalla de carga</label>
+        <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>landscape</span> Imagen de pantalla de carga</label>
         <div class="img-preview-container">
           <img src="" class="img-preview-mini" id="loadingBgPreview" style="display:none;">
           <label class="file-input-label">
-            📸 Subir imagen
+            <span class='msi' style='font-size:16px;'>photo_camera</span> Subir imagen
             <input type="file" hidden accept="image/*" onchange="handleLoadingBgUpload(event)">
           </label>
-          <button class="btn-icon" id="removeLoadingBgBtn" style="display:none;" onclick="removeLoadingBg()">✕</button>
+          <button class="btn-icon" id="removeLoadingBgBtn" style="display:none;" onclick="removeLoadingBg()"><span class='msi' style='font-size:16px;'>close</span></button>
         </div>
         <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:0;">* Se muestra de fondo mientras carga la tienda. Usa una foto vertical (formato de pantalla de móvil) para que se vea completa, sin recortes raros.</p>
       </div>
 
       <!-- Hidden Developer Section -->
       <div id="devSection" class="dev-only">
-        <h5 style="color:#ff0055; margin-bottom:14px;">🛠️ PANEL DE DESARROLLADOR</h5>
+        <h5 style="color:#ff0055; margin-bottom:14px;"><span class='msi' style='font-size:16px;'>build</span> PANEL DE DESARROLLADOR</h5>
 
         <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-          <label style="margin-top:0;">🏷️ Texto pequeño arriba del título (ej: "Pedido directo · sin registro")</label>
+          <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>sell</span> Texto pequeño arriba del título (ej: "Pedido directo · sin registro")</label>
           <input type="text" id="set-eyebrow-text" value="" placeholder="Déjalo vacío para quitarlo por completo">
           <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Si lo dejas vacío, esa línea desaparecerá de la página.</p>
         </div>
 
         <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-          <label style="margin-top:0;">🔑 Clave API de ImgBB (para fotos rápidas)</label>
+          <label style="margin-top:0;"><span class='msi' style='font-size:16px;'>key</span> Clave API de ImgBB (para fotos rápidas)</label>
           <input type="text" id="set-imgbb-key" value="" placeholder="Pega aquí tu clave de api.imgbb.com">
           <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Las fotos que subas desde el panel se guardan en ImgBB (rápido) en vez de en Firestore (lento). Si se deja vacío, se guardan en Firestore como antes.</p>
         </div>
@@ -1686,22 +1686,22 @@
         </div>
 
         <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; background:var(--card-hi);">
-          <span style="font-weight:bold; color:#ff0055;">🗑️ Zona de riesgo</span>
+          <span style="font-weight:bold; color:#ff0055;"><span class='msi' style='font-size:16px;'>delete</span> Zona de riesgo</span>
           <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Borra todas las fotos guardadas en la base de datos (todos los productos se quedarán sin foto). Útil para empezar de cero y liberar espacio. Esta acción no se puede deshacer.</p>
-          <button class="btn-small" style="background:#ff0055; color:white; width:100%;" onclick="clearAllStoredImages()">🗑️ Borrar todas las imágenes guardadas</button>
+          <button class="btn-small" style="background:#ff0055; color:white; width:100%;" onclick="clearAllStoredImages()"><span class='msi' style='font-size:16px;'>delete</span> Borrar todas las imágenes guardadas</button>
         </div>
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
-        <span style="font-weight:bold; color:var(--cream);">📊 Exportar datos</span>
+        <span style="font-weight:bold; color:var(--cream);"><span class='msi' style='font-size:16px;'>bar_chart</span> Exportar datos</span>
         <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Descarga un archivo Excel (.xlsx) con el menú completo, los pedidos y la configuración de la tienda.</p>
-        <button class="btn-small" id="exportExcelBtn" style="width:100%;" onclick="exportAllDataToExcel()">⬇️ Exportar todo (Excel)</button>
+        <button class="btn-small" id="exportExcelBtn" style="width:100%;" onclick="exportAllDataToExcel()"><span class='msi' style='font-size:16px;'>download</span> Exportar todo (Excel)</button>
       </div>
     </div>
   </div>
 
   <div class="admin-footer">
-    <button class="save-btn" onclick="saveAndDownload()">💾 Guardar Cambios</button>
+    <button class="save-btn" onclick="saveAndDownload()"><span class='msi' style='font-size:16px;'>save</span> Guardar Cambios</button>
     <div class="hint" style="margin-top: 10px;">Los cambios se guardan en la base de datos y se ven al instante para todos los visitantes.</div>
   </div>
 </div>
@@ -1720,7 +1720,7 @@
 </div>
 
 <div class="closed-notice" id="closedNotice">
-  <div class="icon">🌙</div>
+  <div class="icon"><span class='msi' style='font-size:20px;'>dark_mode</span></div>
   <h2 class="display">Cerrado Temporalmente</h2>
   <p>Lo sentimos, nuestro restaurante está cerrado en este momento. ¡Vuelve pronto!</p>
   <button class="btn-small" style="margin-top:20px; padding:10px 30px; background:var(--gold); color:var(--bg); border:none;" onclick="document.getElementById('closedNotice').classList.remove('show')">Ver Menú sin pedir</button>
@@ -1730,7 +1730,7 @@
   <h3 class="display" style="font-size:26px; color:var(--gold);">Tu pedido</h3>
   <div class="subhead-row">
     <div class="subhead" style="text-align:left; margin-bottom:0;">Revisa antes de enviar</div>
-    <button class="clear-cart-btn" onclick="clearCart()">🗑️ Vaciar carrito</button>
+    <button class="clear-cart-btn" onclick="clearCart()"><span class='msi' style='font-size:16px;'>delete</span> Vaciar carrito</button>
   </div>
 
   <div class="receipt" id="receipt"></div>
@@ -1744,7 +1744,7 @@
   <label for="notes">Notas del pedido</label>
   <textarea id="notes" placeholder="Sin cebolla, timbre roto, etc. (opcional)"></textarea>
 
-  <button class="send-btn" id="sendBtn" onclick="sendOrder()">📲 Enviar pedido por WhatsApp</button>
+  <button class="send-btn" id="sendBtn" onclick="sendOrder()"><span class='msi' style='font-size:16px;'>send</span> Enviar pedido por WhatsApp</button>
   <button class="call-btn" onclick="callRestaurant()"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 2 .7 3a2 2 0 0 1-.4 2.1L8 10.3a16 16 0 0 0 6 6l1.5-1.4a2 2 0 0 1 2-.4c1 .3 2 .5 3 .7a2 2 0 0 1 1.7 2Z"/></svg></span> Llamar para pedir</button>
   <div class="hint">Se abrirá WhatsApp con tu pedido ya escrito, listo para enviar</div>
 </div>
@@ -1752,20 +1752,20 @@
 <div class="overlay" id="variantOverlay" onclick="if(event.target===this) closeVariantSheet(false)">
 
   <div class="sheet">
-    <button class="close-btn" onclick="closeVariantSheet(false)">✕</button>
+    <button class="close-btn" onclick="closeVariantSheet(false)"><span class='msi' style='font-size:16px;'>close</span></button>
     <div class="sheet-handle"></div>
     <h3 class="display" id="variantTitle">Elige el tamaño</h3>
     <div class="subhead">Puedes añadir varios tamaños del mismo plato</div>
     <div id="variantList"></div>
-    <button class="send-btn" onclick="closeVariantSheet(true)">✅ Listo</button>
+    <button class="send-btn" onclick="closeVariantSheet(true)"><span class='msi' style='font-size:16px;'>check_circle</span> Listo</button>
   </div>
 </div>
 
 <div class="overlay" id="confirmActionOverlay" onclick="if(event.target===this) closeConfirmAction()">
   <div class="sheet" style="text-align:center;">
-    <button class="close-btn" onclick="closeConfirmAction()">✕</button>
+    <button class="close-btn" onclick="closeConfirmAction()"><span class='msi' style='font-size:16px;'>close</span></button>
     <div class="sheet-handle"></div>
-    <div class="confirm-check" style="background:var(--flame); color:var(--cream);">⚠️</div>
+    <div class="confirm-check" style="background:var(--flame); color:var(--cream);"><span class='msi' style='font-size:16px;'>warning</span></div>
     <h3 class="display" id="confirmActionTitle">¿Estás seguro?</h3>
     <div class="subhead" id="confirmActionMessage"></div>
     <button class="call-btn" style="margin-top:18px; border-color:var(--flame); color:var(--flame);" id="confirmActionYesBtn">Sí, continuar</button>
@@ -1775,19 +1775,19 @@
 
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this) closeConfirmation()">
   <div class="sheet" style="text-align:center;">
-    <button class="close-btn" onclick="closeConfirmation()">✕</button>
+    <button class="close-btn" onclick="closeConfirmation()"><span class='msi' style='font-size:16px;'>close</span></button>
     <div class="sheet-handle"></div>
-    <div class="confirm-check" style="background:var(--gold); color:var(--bg);">📲</div>
+    <div class="confirm-check" style="background:var(--gold); color:var(--bg);"><span class='msi' style='font-size:16px;'>send</span></div>
     <h3 class="display">¡Ya casi está!</h3>
     <div class="subhead">Pulsa el botón para enviar tu pedido por WhatsApp. Tu pedido no llegará al restaurante hasta que lo hagas.</div>
 
-    <a id="confirmWaLink" class="send-btn" href="#" target="_blank" rel="noopener noreferrer" onclick="markOrderAsSent()" style="text-decoration:none; margin-top:18px;">📲 Enviar pedido por WhatsApp</a>
-    <button class="call-btn" style="margin-top:10px; border-color:var(--flame);" onclick="showNoWhatsappError()">❌ No tengo WhatsApp instalado</button>
+    <a id="confirmWaLink" class="send-btn" href="#" target="_blank" rel="noopener noreferrer" onclick="markOrderAsSent()" style="text-decoration:none; margin-top:18px;"><span class='msi' style='font-size:16px;'>send</span> Enviar pedido por WhatsApp</a>
+    <button class="call-btn" style="margin-top:10px; border-color:var(--flame);" onclick="showNoWhatsappError()"><span class='msi' style='font-size:16px;'>cancel</span> No tengo WhatsApp instalado</button>
 
     <div id="noWhatsappBox" style="display:none; margin:16px 0 12px; padding:18px; background:rgba(214,73,51,0.12); border:1px solid var(--flame); border-radius:14px; text-align:left;">
-      <div style="color:var(--flame); font-weight:bold; margin-bottom:8px;">⚠️ Necesitas WhatsApp para completar tu pedido</div>
+      <div style="color:var(--flame); font-weight:bold; margin-bottom:8px;"><span class='msi' style='font-size:16px;'>warning</span> Necesitas WhatsApp para completar tu pedido</div>
       <div style="color:var(--cream); font-size:14px; margin-bottom:10px;">Este pedido se hace únicamente por WhatsApp. Instala la app y vuelve a intentarlo, o llama directamente al restaurante.</div>
-      <a href="https://www.whatsapp.com/download" target="_blank" rel="noopener noreferrer" style="color:var(--gold); font-size:14px; text-decoration:underline;">📥 Descargar WhatsApp</a>
+      <a href="https://www.whatsapp.com/download" target="_blank" rel="noopener noreferrer" style="color:var(--gold); font-size:14px; text-decoration:underline;"><span class='msi' style='font-size:16px;'>download</span> Descargar WhatsApp</a>
     </div>
 
     <div id="orderNumberBox" style="display:none; margin:16px 0 12px; padding:18px; background:var(--card-hi); border:1px solid var(--flame-dim); border-radius:14px;">
@@ -1796,7 +1796,7 @@
     </div>
 
     <div id="deliveryWindowBox" style="display:none; margin-bottom:12px; padding:16px; background:var(--card-hi); border:1px solid var(--line); border-radius:14px;">
-      <div style="font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">🕐 Llegada estimada (tras confirmar)</div>
+      <div style="font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;"><span class='msi' style='font-size:16px;'>schedule</span> Llegada estimada (tras confirmar)</div>
       <div id="confirmDeliveryWindow" style="font-family:'Space Mono'; font-size:20px; color:var(--cream); font-weight:bold;">--:-- – --:--</div>
     </div>
 
@@ -1806,7 +1806,7 @@
     </div>
 
     <div id="orderSavedHint" class="hint" style="display:none; margin-bottom:16px;">Guarda el número de pedido por si necesitas consultarlo</div>
-    <button class="call-btn" id="trackThisOrderBtn" style="display:none; margin-bottom:10px;" onclick="openTrackOrder(lastOrderNumber)">📦 Seguir este pedido</button>
+    <button class="call-btn" id="trackThisOrderBtn" style="display:none; margin-bottom:10px;" onclick="openTrackOrder(lastOrderNumber)"><span class='msi' style='font-size:16px;'>inventory_2</span> Seguir este pedido</button>
     <button class="call-btn" onclick="closeConfirmation()">Cerrar</button>
     <button class="call-btn" style="margin-top:10px;" onclick="callRestaurant()"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 2 .7 3a2 2 0 0 1-.4 2.1L8 10.3a16 16 0 0 0 6 6l1.5-1.4a2 2 0 0 1 2-.4c1 .3 2 .5 3 .7a2 2 0 0 1 1.7 2Z"/></svg></span> ¿Algún problema? Llámanos</button>
   </div>
@@ -2088,10 +2088,10 @@ async function clearAllStoredImages(){
 
       renderAdminPanel();
       renderMenu();
-      showToast("🗑️", "Todas las imágenes se han borrado correctamente.");
+      showToast("<span class='msi' style='font-size:16px;'>delete</span>", "Todas las imágenes se han borrado correctamente.");
     } catch(e){
       console.error("No se pudieron borrar las imágenes:", e);
-      showToast("⚠️", "Hubo un error al borrar las imágenes. Inténtalo de nuevo.", true);
+      showToast("<span class='msi' style='font-size:16px;'>warning</span>", "Hubo un error al borrar las imágenes. Inténtalo de nuevo.", true);
     }
   }, "¿Borrar todas las imágenes?");
 }
@@ -2217,7 +2217,7 @@ function renderMenu(){
       const imgBlock = imgSrc
         ? `<div class="item-img-wrap"><img class="item-img" src="${imgSrc}" alt="${it.name}" loading="lazy" style="transform:scale(${zoom/100}); object-position:${posX}% ${posY}%;"></div>`
         : (it.imgKey ? `<div class="item-img-skeleton"></div>` : "");
-      const featuredBadge = it.featured ? `<span class="featured-badge">🔥</span>` : "";
+      const featuredBadge = it.featured ? `<span class="featured-badge"><span class='msi' style='font-size:16px;'>local_fire_department</span></span>` : "";
       row.innerHTML = `
         ${featuredBadge}
         ${imgBlock}
@@ -2317,7 +2317,7 @@ function openVariantSheet(itemId){
   document.getElementById("variantOverlay").classList.add("show");
 }
 // commit=true ("Listo") applies the staged picks to the real cart/order.
-// commit=false (✕ or tapping outside the sheet) simply discards them — the real cart
+// commit=false (<span class='msi' style='font-size:16px;'>close</span> or tapping outside the sheet) simply discards them — the real cart
 // (and the total shown in the cart bar) never changed while the sheet was open, so
 // the order goes back to exactly what it was before (0 for a brand-new item).
 function closeVariantSheet(commit){
@@ -2449,7 +2449,7 @@ function renderReceipt(){
   if (MIN_ORDER_AMOUNT > 0 && subtotal < MIN_ORDER_AMOUNT) {
     const missing = MIN_ORDER_AMOUNT - subtotal;
     html += `<div class="rdiv"></div><div class="rtotal"><span>TOTAL</span><span>${fmt(subtotal)}</span></div>`;
-    html += `<div class="min-order-note">🛒 Añade ${fmt(missing)} más para alcanzar el pedido mínimo de ${fmt(MIN_ORDER_AMOUNT)}</div>`;
+    html += `<div class="min-order-note"><span class='msi' style='font-size:16px;'>shopping_cart</span> Añade ${fmt(missing)} más para alcanzar el pedido mínimo de ${fmt(MIN_ORDER_AMOUNT)}</div>`;
     receipt.innerHTML = html;
     document.getElementById("sendBtn").disabled = true;
     return;
@@ -2462,14 +2462,14 @@ function renderReceipt(){
 
   if (appliedDiscount){
     html += `<div class="rline"><span class="rname">Subtotal</span><span>${fmt(subtotal)}</span></div>`;
-    html += `<div class="rline"><span class="rname" style="color:var(--gold);">🎁 ${appliedDiscount.code}</span><span style="color:var(--gold);">-${fmt(discount)}</span></div>`;
+    html += `<div class="rline"><span class="rname" style="color:var(--gold);"><span class='msi' style='font-size:16px;'>card_giftcard</span> ${appliedDiscount.code}</span><span style="color:var(--gold);">-${fmt(discount)}</span></div>`;
   }
   html += `<div class="rtotal"><span>TOTAL</span><span>${fmt(total)}</span></div>`;
 
   // Discount code entry
   if (appliedDiscount){
     html += `<div class="discount-applied-row">
-      <span>🎁 Código <b>${appliedDiscount.code}</b> aplicado</span>
+      <span><span class='msi' style='font-size:16px;'>card_giftcard</span> Código <b>${appliedDiscount.code}</b> aplicado</span>
       <button type="button" class="clear-cart-btn" onclick="removeDiscountCodeFromCart()">Quitar</button>
     </div>`;
   } else if (DISCOUNT_CODES.some(dc => dc.active !== false)) {
@@ -3043,7 +3043,7 @@ function startOrdersListener(){
         });
         if (newlyAdded.length) {
           playOrderAlert();
-          showToast("🔔", newlyAdded.length === 1 ? "¡Nuevo pedido recibido!" : `¡${newlyAdded.length} pedidos nuevos recibidos!`);
+          showToast("<span class='msi' style='font-size:16px;'>notifications</span>", newlyAdded.length === 1 ? "¡Nuevo pedido recibido!" : `¡${newlyAdded.length} pedidos nuevos recibidos!`);
           flashOrdersBadge();
         }
       } else {
@@ -3059,10 +3059,10 @@ function startOrdersListener(){
 
 // --- Order status pipeline: shared between the admin order cards and the customer tracking view ---
 const ORDER_STATUSES = [
-  { key: "recibido",   label: "Recibido",   icon: "📥" },
-  { key: "preparando", label: "Preparando", icon: "👨‍🍳" },
-  { key: "listo",      label: "Listo",      icon: "🛵" },
-  { key: "entregado",  label: "Entregado",  icon: "✅" }
+  { key: "recibido",   label: "Recibido",   icon: "<span class='msi' style='font-size:16px;'>move_to_inbox</span>" },
+  { key: "preparando", label: "Preparando", icon: "<span class='msi' style='font-size:16px;'>skillet</span>" },
+  { key: "listo",      label: "Listo",      icon: "<span class='msi' style='font-size:16px;'>two_wheeler</span>" },
+  { key: "entregado",  label: "Entregado",  icon: "<span class='msi' style='font-size:16px;'>check_circle</span>" }
 ];
 
 function orderStatusIndex(status){
@@ -3072,7 +3072,7 @@ function orderStatusIndex(status){
 
 function renderStatusPipeline(status){
   if(status === "cancelado"){
-    return `<div class="status-cancelled">❌ Pedido cancelado</div>`;
+    return `<div class="status-cancelled"><span class='msi' style='font-size:16px;'>cancel</span> Pedido cancelado</div>`;
   }
   const idx = orderStatusIndex(status);
   let html = '<div class="status-pipeline">';
@@ -3093,7 +3093,7 @@ async function advanceOrderStatus(orderId, newStatus){
     await db.collection("orderStatus").doc(orderId).update({ status: newStatus }); // keep the public tracking copy in sync
   } catch(e){
     console.error("No se pudo actualizar el estado del pedido:", e);
-    showToast("⚠️", "No se pudo actualizar el pedido.", true);
+    showToast("<span class='msi' style='font-size:16px;'>warning</span>", "No se pudo actualizar el pedido.", true);
   }
 }
 
@@ -3123,7 +3123,7 @@ async function cancelOrder(orderId){
       await db.collection("orderStatus").doc(orderId).update({ status: "cancelado" }); // keep the public tracking copy in sync
     } catch(e){
       console.error("No se pudo cancelar el pedido:", e);
-      showToast("⚠️", "No se pudo cancelar el pedido.", true);
+      showToast("<span class='msi' style='font-size:16px;'>warning</span>", "No se pudo cancelar el pedido.", true);
     }
   }, "¿Cancelar este pedido?");
 }
@@ -3213,9 +3213,9 @@ function renderOrdersList(snap, newlyAdded){
       </div>
       <div class="order-items">${itemsHtml}</div>
       <div class="order-meta">
-        📍 <b>${escapeHtml(o.address) || '—'}</b><br>
-        ${o.phone ? `📞 <b>${escapeHtml(o.phone)}</b><br>` : ""}
-        ${o.notes ? `📝 ${escapeHtml(o.notes)}` : ""}
+        <span class='msi' style='font-size:16px;'>location_on</span> <b>${escapeHtml(o.address) || '—'}</b><br>
+        ${o.phone ? `<span class='msi' style='font-size:16px;'>call</span> <b>${escapeHtml(o.phone)}</b><br>` : ""}
+        ${o.notes ? `<span class='msi' style='font-size:16px;'>description</span> ${escapeHtml(o.notes)}` : ""}
       </div>
       ${renderStatusPipeline(status)}
       <div class="order-status-actions">
@@ -3224,7 +3224,7 @@ function renderOrdersList(snap, newlyAdded){
       </div>
       <div class="order-bottom">
         <span class="order-total">${fmt(o.total || 0)}</span>
-        ${o.discountCode ? `<span class="order-discount-badge">🎁 ${escapeHtml(o.discountCode)} (-${fmt(o.discountAmount || 0)})</span>` : ""}
+        ${o.discountCode ? `<span class="order-discount-badge"><span class='msi' style='font-size:16px;'>card_giftcard</span> ${escapeHtml(o.discountCode)} (-${fmt(o.discountAmount || 0)})</span>` : ""}
       </div>
     `;
     box.appendChild(card);
@@ -3232,7 +3232,7 @@ function renderOrdersList(snap, newlyAdded){
   });
 }
 
-// One-time manual fetch: used for the "🔄 Actualizar" button and as a fallback
+// One-time manual fetch: used for the "<span class='msi' style='font-size:16px;'>refresh</span> Actualizar" button and as a fallback
 // if the live listener hasn't kicked in yet.
 async function loadOrdersList(){
   const box = document.getElementById('ordersListContent');
@@ -3333,7 +3333,7 @@ async function loadStats(range){
 function renderStats(orders, range){
   const box = document.getElementById('statsContent');
   if (orders.length === 0) {
-    box.innerHTML = '<div class="stats-empty">📊<br>No hay pedidos en este período todavía.</div>';
+    box.innerHTML = "<div class=\"stats-empty\"><span class='msi' style='font-size:16px;'>bar_chart</span><br>No hay pedidos en este período todavía.</div>";
     return;
   }
 
@@ -3388,28 +3388,28 @@ function renderStats(orders, range){
   box.innerHTML = `
     <div class="stats-cards">
       <div class="stats-card">
-        <span class="stats-icon">💶</span>
+        <span class="stats-icon"><span class='msi' style='font-size:16px;'>payments</span></span>
         <span class="stats-value">${fmt(totalRevenue)}</span>
         <span class="stats-label">Ventas (${rangeLabel})</span>
       </div>
       <div class="stats-card">
-        <span class="stats-icon">🧾</span>
+        <span class="stats-icon"><span class='msi' style='font-size:16px;'>receipt_long</span></span>
         <span class="stats-value">${orderCount}</span>
         <span class="stats-label">Pedidos totales</span>
       </div>
       <div class="stats-card">
-        <span class="stats-icon">📈</span>
+        <span class="stats-icon"><span class='msi' style='font-size:16px;'>trending_up</span></span>
         <span class="stats-value">${fmt(avgTicket)}</span>
         <span class="stats-label">Ticket medio</span>
       </div>
       <div class="stats-card">
-        <span class="stats-icon">✅</span>
+        <span class="stats-icon"><span class='msi' style='font-size:16px;'>check_circle</span></span>
         <span class="stats-value">${completedCount}/${pendingCount}</span>
         <span class="stats-label">Completados / Pendientes</span>
       </div>
     </div>
 
-    <div class="stats-section-title">🏆 Productos más vendidos</div>
+    <div class="stats-section-title"><span class='msi' style='font-size:16px;'>emoji_events</span> Productos más vendidos</div>
     ${topItems.map(([name, s], i) => `
       <div class="top-item-row">
         <span class="top-item-rank">#${i+1}</span>
@@ -3421,7 +3421,7 @@ function renderStats(orders, range){
       </div>
     `).join("")}
 
-    <div class="stats-section-title">📅 Ventas — últimos 7 días</div>
+    <div class="stats-section-title"><span class='msi' style='font-size:16px;'>calendar_today</span> Ventas — últimos 7 días</div>
     <div class="daily-chart">
       ${dayKeys.map((k,i) => `
         <div class="day-col">
@@ -3433,7 +3433,7 @@ function renderStats(orders, range){
       `).join("")}
     </div>
 
-    <div class="stats-section-title">🕐 Horas con más pedidos</div>
+    <div class="stats-section-title"><span class='msi' style='font-size:16px;'>schedule</span> Horas con más pedidos</div>
     <div class="hourly-chart">
       ${hourBuckets.map((c,i) => `<div class="hour-bar ${i===peakBucketIdx && c>0 ? 'peak' : ''}" style="height:${Math.max(3, c/maxHourCount*100)}%;" title="${String(i*2).padStart(2,'0')}h–${String(i*2+2).padStart(2,'0')}h: ${c} pedidos"></div>`).join("")}
     </div>
@@ -3495,7 +3495,7 @@ function renderAdminPanel() {
       <div class="admin-group-header">
         <input type="text" value="${cat.cat}" onchange="menuData[${catIdx}].cat = this.value; renderNav();" style="margin:0; padding:4px 8px; font-weight:bold; width:70%;">
         <div class="admin-group-actions">
-          <button class="btn-icon" onclick="deleteCategory(${catIdx})">🗑️</button>
+          <button class="btn-icon" onclick="deleteCategory(${catIdx})"><span class='msi' style='font-size:16px;'>delete</span></button>
         </div>
       </div>
     `;
@@ -3513,7 +3513,7 @@ function renderAdminPanel() {
                 <div class="variant-admin-row">
                   <input type="text" class="variant-label-input" value="${v.label}" placeholder="Tamaño">
                   <input type="number" step="0.1" class="variant-price-input" value="${v.price}" placeholder="Precio">
-                  <button type="button" class="btn-icon" onclick="deleteVariant(${catIdx}, ${itemIdx}, ${vIdx})">✕</button>
+                  <button type="button" class="btn-icon" onclick="deleteVariant(${catIdx}, ${itemIdx}, ${vIdx})"><span class='msi' style='font-size:16px;'>close</span></button>
                 </div>
               `).join("")}
             </div>
@@ -3545,10 +3545,10 @@ function renderAdminPanel() {
           <div class="img-preview-container">
             <img src="${imgSrc}" class="img-preview-mini" id="prev-${catIdx}-${itemIdx}" style="display:${imgSrc?'block':'none'}">
             <label class="file-input-label">
-              📸 ${imgSrc ? 'Cambiar Imagen' : 'Subir Imagen'}
+              <span class='msi' style='font-size:16px;'>photo_camera</span> ${imgSrc ? 'Cambiar Imagen' : 'Subir Imagen'}
               <input type="file" hidden accept="image/*" onchange="handleImgUpload(event, ${catIdx}, ${itemIdx})">
             </label>
-            ${imgSrc ? `<button class="btn-icon" onclick="removeImg(${catIdx}, ${itemIdx})">✕</button>` : ''}
+            ${imgSrc ? `<button class="btn-icon" onclick="removeImg(${catIdx}, ${itemIdx})"><span class='msi' style='font-size:16px;'>close</span></button>` : ''}
           </div>
 
           ${imgSrc ? `
@@ -3556,18 +3556,18 @@ function renderAdminPanel() {
             <div class="img-zoom-preview-frame">
               <img id="editPrev-${catIdx}-${itemIdx}" src="${imgSrc}" style="transform:scale(${(item.imgZoom||100)/100}); object-position:${item.imgPosX!=null?item.imgPosX:50}% ${item.imgPosY!=null?item.imgPosY:50}%;">
             </div>
-            <label style="font-size:11px; font-weight:normal;">🔍 Zoom (<span id="zoomVal-${catIdx}-${itemIdx}">${item.imgZoom||100}</span>%)</label>
+            <label style="font-size:11px; font-weight:normal;"><span class='msi' style='font-size:16px;'>search</span> Zoom (<span id="zoomVal-${catIdx}-${itemIdx}">${item.imgZoom||100}</span>%)</label>
             <input type="range" min="100" max="250" value="${item.imgZoom||100}" oninput="adjustItemImage(${catIdx},${itemIdx},'imgZoom',this.value)">
-            <label style="font-size:11px; font-weight:normal;">↔️ Posición horizontal</label>
+            <label style="font-size:11px; font-weight:normal;"><span class='msi' style='font-size:13px;'>swap_horiz</span> Posición horizontal</label>
             <input type="range" min="0" max="100" value="${item.imgPosX!=null?item.imgPosX:50}" oninput="adjustItemImage(${catIdx},${itemIdx},'imgPosX',this.value)">
-            <label style="font-size:11px; font-weight:normal;">↕️ Posición vertical</label>
+            <label style="font-size:11px; font-weight:normal;"><span class='msi' style='font-size:13px;'>swap_vert</span> Posición vertical</label>
             <input type="range" min="0" max="100" value="${item.imgPosY!=null?item.imgPosY:50}" oninput="adjustItemImage(${catIdx},${itemIdx},'imgPosY',this.value)">
-            <button class="btn-small" onclick="resetItemImagePosition(${catIdx},${itemIdx})">↺ Restablecer encuadre</button>
+            <button class="btn-small" onclick="resetItemImagePosition(${catIdx},${itemIdx})"><span class='msi' style='font-size:16px;'>restart_alt</span> Restablecer encuadre</button>
           </div>
           ` : ''}
 
           <div class="admin-soldout-row">
-            <span>🔥 Más pedido (muestra una llama sobre la foto del plato)</span>
+            <span><span class='msi' style='font-size:16px;'>local_fire_department</span> Más pedido (muestra una llama sobre la foto del plato)</span>
             <label class="switch">
               <input type="checkbox" ${item.featured ? 'checked' : ''} onchange="toggleFeatured(${catIdx}, ${itemIdx}, this.checked)">
               <span class="slider"></span>
@@ -3575,7 +3575,7 @@ function renderAdminPanel() {
           </div>
 
           <div class="admin-soldout-row">
-            <span>🚫 Agotado hoy (se oculta el botón de añadir, pero el plato sigue visible)</span>
+            <span><span class='msi' style='font-size:14px;'>block</span> Agotado hoy (se oculta el botón de añadir, pero el plato sigue visible)</span>
             <label class="switch">
               <input type="checkbox" ${item.soldOut ? 'checked' : ''} onchange="toggleSoldOut(${catIdx}, ${itemIdx}, this.checked)">
               <span class="slider"></span>
@@ -3768,7 +3768,7 @@ function renderDiscountCodesEditor(){
         <input type="checkbox" ${dc.active !== false ? 'checked' : ''} onchange="DISCOUNT_CODES[${idx}].active = this.checked;">
         <span class="slider"></span>
       </label>
-      <button class="btn-icon" onclick="removeDiscountCode(${idx})">✕</button>
+      <button class="btn-icon" onclick="removeDiscountCode(${idx})"><span class='msi' style='font-size:16px;'>close</span></button>
     </div>
   `).join('');
 }
@@ -3856,7 +3856,7 @@ async function exportAllDataToExcel(){
   if(btn){ btn.disabled = true; btn.textContent = '⏳ Generando…'; }
   try {
     if(typeof XLSX === 'undefined'){
-      showToast('⚠️', 'No se pudo cargar la librería de Excel. Revisa tu conexión.', true);
+      showToast("<span class='msi' style='font-size:16px;'>warning</span>", "No se pudo cargar la librería de Excel. Revisa tu conexión.", true);
       return;
     }
     const wb = XLSX.utils.book_new();
@@ -3904,10 +3904,10 @@ async function exportAllDataToExcel(){
 
     const dateStr = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `datos-tienda-${dateStr}.xlsx`);
-    showToast("✅", "Excel descargado correctamente.");
+    showToast("<span class='msi' style='font-size:16px;'>check_circle</span>", "Excel descargado correctamente.");
   } catch(e){
     console.error("No se pudo generar el Excel:", e);
-    showToast("⚠️", "No se pudo generar el archivo Excel.", true);
+    showToast("<span class='msi' style='font-size:16px;'>warning</span>", "No se pudo generar el archivo Excel.", true);
   } finally {
     if(btn){ btn.disabled = false; btn.textContent = originalText; }
   }
@@ -3976,10 +3976,10 @@ async function saveAndDownload() {
   // Persist everything to the database so all visitors see it immediately, without redeploying any file
   try {
     await saveToFirestore();
-    showToast("✅", "¡Cambios guardados! Ya son visibles para todos los visitantes.");
+    showToast("<span class='msi' style='font-size:16px;'>check_circle</span>", "¡Cambios guardados! Ya son visibles para todos los visitantes.");
   } catch(e){
     console.error(e);
-    showToast("⚠️", "No se pudo guardar en la base de datos. Revisa tu conexión e inténtalo de nuevo.", true);
+    showToast("<span class='msi' style='font-size:16px;'>warning</span>", "No se pudo guardar en la base de datos. Revisa tu conexión e inténtalo de nuevo.", true);
   }
   toggleAdmin();
 }
@@ -4050,10 +4050,10 @@ function activateAdminUI(userEmail, opts) {
 
   if (IS_DEVELOPER) {
     if (adminBtnIcon) adminBtnIcon.style.color = "var(--gold)";
-    if (opts.showAlert) showToast("🚀", "Modo desarrollador activado");
+    if (opts.showAlert) showToast("<span class='msi' style='font-size:16px;'>rocket_launch</span>", "Modo desarrollador activado");
   } else {
     if (adminBtnIcon) adminBtnIcon.style.color = "";
-    if (opts.showAlert) showToast("✅", "Modo administrador activado");
+    if (opts.showAlert) showToast("<span class='msi' style='font-size:16px;'>check_circle</span>", "Modo administrador activado");
   }
 }
 
@@ -4062,7 +4062,7 @@ function checkAdminPassword() {
   const pass = document.getElementById("adminPassInput").value;
 
   if (!email || !pass) {
-    showToast("❌", "Escribe tu correo y contraseña", true);
+    showToast("<span class='msi' style='font-size:16px;'>cancel</span>", "Escribe tu correo y contraseña", true);
     return;
   }
 
@@ -4074,7 +4074,7 @@ function checkAdminPassword() {
       closeLogin();
     })
     .catch((error) => {
-      showToast("❌", "Correo o contraseña incorrectos", true);
+      showToast("<span class='msi' style='font-size:16px;'>cancel</span>", "Correo o contraseña incorrectos", true);
       document.getElementById("adminPassInput").value = "";
       document.getElementById("adminPassInput").focus();
     });
