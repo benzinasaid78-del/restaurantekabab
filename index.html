@@ -431,6 +431,9 @@
     padding: 20px;
   }
   .overlay.show{display:flex;}
+  #confirmActionOverlay{
+    z-index:10010; /* can be triggered from inside .admin-panel (1000) or .login-overlay (10000), must beat both */
+  }
   .sheet{
     background:#100C09;
     width:100%;
@@ -1101,7 +1104,7 @@
     left: 50%;
     top: 24px;
     transform: translate(-50%, -20px);
-    z-index: 9999;
+    z-index: 10050; /* must stay above .login-overlay (10000) so login-related toasts are visible */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1690,6 +1693,18 @@
   </div>
 </div>
 
+<div class="overlay" id="confirmActionOverlay" onclick="if(event.target===this) closeConfirmAction()">
+  <div class="sheet" style="text-align:center;">
+    <button class="close-btn" onclick="closeConfirmAction()">✕</button>
+    <div class="sheet-handle"></div>
+    <div class="confirm-check" style="background:var(--flame); color:var(--cream);">⚠️</div>
+    <h3 class="display" id="confirmActionTitle">¿Estás seguro?</h3>
+    <div class="subhead" id="confirmActionMessage"></div>
+    <button class="call-btn" style="margin-top:18px; border-color:var(--flame); color:var(--flame);" id="confirmActionYesBtn">Sí, continuar</button>
+    <button class="send-btn" style="margin-top:10px;" onclick="closeConfirmAction()">Volver</button>
+  </div>
+</div>
+
 <div class="overlay" id="confirmOverlay" onclick="if(event.target===this) closeConfirmation()">
   <div class="sheet" style="text-align:center;">
     <button class="close-btn" onclick="closeConfirmation()">✕</button>
@@ -1991,24 +2006,25 @@ async function loadImagesFromFirestore(){
 // Deletes every stored product photo from the database (used to start fresh / free up space).
 // Also clears the imgKey reference on every menu item so nothing points to a deleted photo.
 async function clearAllStoredImages(){
-  if(!confirm("¿Seguro que quieres borrar TODAS las imágenes guardadas en la base de datos? Todos los productos se quedarán sin foto. Esta acción no se puede deshacer.")) return;
-  try {
-    const snap = await db.collection("restaurant_images").get();
-    const batch = db.batch();
-    snap.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
+  showConfirmAction("Todos los productos se quedarán sin foto. Esta acción no se puede deshacer.", async () => {
+    try {
+      const snap = await db.collection("restaurant_images").get();
+      const batch = db.batch();
+      snap.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
 
-    for(const key in IMAGES) delete IMAGES[key];
-    menuData.forEach(cat => cat.items.forEach(it => { delete it.imgKey; }));
-    await saveToFirestore();
+      for(const key in IMAGES) delete IMAGES[key];
+      menuData.forEach(cat => cat.items.forEach(it => { delete it.imgKey; }));
+      await saveToFirestore();
 
-    renderAdminPanel();
-    renderMenu();
-    alert("Todas las imágenes se han borrado correctamente.");
-  } catch(e){
-    console.error("No se pudieron borrar las imágenes:", e);
-    alert("Hubo un error al borrar las imágenes. Inténtalo de nuevo.");
-  }
+      renderAdminPanel();
+      renderMenu();
+      showToast("🗑️", "Todas las imágenes se han borrado correctamente.");
+    } catch(e){
+      console.error("No se pudieron borrar las imágenes:", e);
+      showToast("⚠️", "Hubo un error al borrar las imágenes. Inténtalo de nuevo.", true);
+    }
+  }, "¿Borrar todas las imágenes?");
 }
 
 async function saveToFirestore(){
@@ -2953,15 +2969,35 @@ async function advanceOrderStatus(orderId, newStatus){
   }
 }
 
+// Generic themed replacement for the native browser confirm() dialog, so destructive
+// actions (like cancelling an order) match the rest of the site's look instead of
+// showing the plain OS/browser popup.
+function showConfirmAction(message, onConfirm, title){
+  document.getElementById("confirmActionTitle").textContent = title || "¿Estás seguro?";
+  document.getElementById("confirmActionMessage").textContent = message;
+  const yesBtn = document.getElementById("confirmActionYesBtn");
+  const freshYesBtn = yesBtn.cloneNode(true); // clears any previously-bound onclick from an earlier call
+  yesBtn.parentNode.replaceChild(freshYesBtn, yesBtn);
+  freshYesBtn.onclick = () => {
+    closeConfirmAction();
+    onConfirm();
+  };
+  document.getElementById("confirmActionOverlay").classList.add("show");
+}
+function closeConfirmAction(){
+  document.getElementById("confirmActionOverlay").classList.remove("show");
+}
+
 async function cancelOrder(orderId){
-  if(!confirm("¿Seguro que quieres cancelar este pedido?")) return;
-  try {
-    await db.collection("orders").doc(orderId).update({ status: "cancelado" });
-    await db.collection("orderStatus").doc(orderId).update({ status: "cancelado" }); // keep the public tracking copy in sync
-  } catch(e){
-    console.error("No se pudo cancelar el pedido:", e);
-    showToast("⚠️", "No se pudo cancelar el pedido.", true);
-  }
+  showConfirmAction("Esta acción no se puede deshacer.", async () => {
+    try {
+      await db.collection("orders").doc(orderId).update({ status: "cancelado" });
+      await db.collection("orderStatus").doc(orderId).update({ status: "cancelado" }); // keep the public tracking copy in sync
+    } catch(e){
+      console.error("No se pudo cancelar el pedido:", e);
+      showToast("⚠️", "No se pudo cancelar el pedido.", true);
+    }
+  }, "¿Cancelar este pedido?");
 }
 
 // --- Customer-facing order tracking (looked up by order number, live-updating) ---
@@ -3611,11 +3647,11 @@ function addNewCategory() {
 }
 
 function deleteCategory(idx) {
-  if(confirm('¿Seguro que quieres eliminar toda esta categoría?')) {
+  showConfirmAction("Se eliminarán también todos los productos que contiene.", () => {
     menuData.splice(idx, 1);
     renderAdminPanel();
     renderNav();
-  }
+  }, "¿Eliminar esta categoría?");
 }
 
 function addNewItem(catIdx) {
@@ -3846,10 +3882,10 @@ function activateAdminUI(userEmail, opts) {
 
   if (IS_DEVELOPER) {
     if (adminBtnIcon) adminBtnIcon.style.color = "var(--gold)";
-    if (opts.showAlert) alert("🚀 MODO DESARROLLADOR ACTIVADO");
+    if (opts.showAlert) showToast("🚀", "Modo desarrollador activado");
   } else {
     if (adminBtnIcon) adminBtnIcon.style.color = "";
-    if (opts.showAlert) alert("✅ Modo administrador activado");
+    if (opts.showAlert) showToast("✅", "Modo administrador activado");
   }
 }
 
@@ -3858,7 +3894,7 @@ function checkAdminPassword() {
   const pass = document.getElementById("adminPassInput").value;
 
   if (!email || !pass) {
-    alert("❌ Escribe tu correo y contraseña");
+    showToast("❌", "Escribe tu correo y contraseña", true);
     return;
   }
 
@@ -3870,7 +3906,7 @@ function checkAdminPassword() {
       closeLogin();
     })
     .catch((error) => {
-      alert("❌ Correo o contraseña incorrectos");
+      showToast("❌", "Correo o contraseña incorrectos", true);
       document.getElementById("adminPassInput").value = "";
       document.getElementById("adminPassInput").focus();
     });
