@@ -1892,6 +1892,18 @@ let currentVariantItemId = null;
 let variantStaged = {};
 
 function rebuildRegistry(){
+  // Product IDs are regenerated from scratch below (they're just "iN" positions, not stable
+  // Firestore IDs), so a customer's cart — keyed by the OLD ids — would otherwise be silently
+  // wiped every time this runs again (e.g. slow connection: local data loads first, then the
+  // real Firestore data arrives a few seconds later and this is called a second time).
+  // We save {name -> qty} from the old registry first, rebuild everything, then restore the
+  // qty for any item whose name still matches — so an in-progress order survives a re-sync.
+  const previousQtyByName = {};
+  Object.entries(cart).forEach(([id, qty]) => {
+    const info = registry[id];
+    if(info) previousQtyByName[info.name] = (previousQtyByName[info.name] || 0) + qty;
+  });
+
   cart = {};
   let newUid = 0;
   for(const key in registry) delete registry[key];
@@ -1906,6 +1918,11 @@ function rebuildRegistry(){
       registry[it.id] = {kind:"simple", name: it.name, price: it.price, item: it};
     }
   }));
+
+  Object.entries(previousQtyByName).forEach(([name, qty]) => {
+    const match = Object.entries(registry).find(([, info]) => info.name === name);
+    if(match) cart[match[0]] = qty;
+  });
 }
 
 // --- Load live data from Firestore (falls back to the built-in defaults above if it fails) ---
@@ -2293,7 +2310,18 @@ function renderVariantSheet(){
   });
 }
 
+// If an item gets deleted from the menu (by the admin) while a customer already has it in
+// their cart, `registry[id]` becomes undefined and every price calculation below would crash.
+// Calling this first removes any such stale entry quietly, so the cart just keeps working
+// with whatever is still valid instead of freezing up on the customer.
+function pruneInvalidCartItems(){
+  Object.keys(cart).forEach(id => {
+    if(!registry[id]) delete cart[id];
+  });
+}
+
 function cartTotals(){
+  pruneInvalidCartItems();
   let count = 0, total = 0;
   Object.entries(cart).forEach(([id, qty]) => {
     const info = registry[id];
@@ -2313,6 +2341,7 @@ function updateCartBar(){
 }
 
 function renderReceipt(){
+  pruneInvalidCartItems();
   const receipt = document.getElementById("receipt");
   const entries = Object.entries(cart);
   if(entries.length === 0){
@@ -2478,6 +2507,7 @@ function callRestaurant(){
 }
 
 async function sendOrder(){
+  pruneInvalidCartItems();
   const addrEl = document.getElementById("addr");
   const notesEl = document.getElementById("notes");
   const phoneEl = document.getElementById("phone");
@@ -3607,6 +3637,15 @@ function deleteItem(catIdx, itemIdx) {
 }
 
 // --- Export the whole store's data (menu, orders, settings) as a single Excel file ---
+// If a customer's address/notes text happens to start with =, +, -, or @, Excel can interpret
+// it as a formula when this export is opened (CSV/formula injection). Prefixing it with a plain
+// apostrophe forces Excel to treat it as literal text — harmless everywhere else (Excel hides
+// the apostrophe itself, and it doesn't affect the sheet if opened anywhere but Excel/Sheets).
+function sanitizeForSpreadsheet(value){
+  const str = String(value ?? "");
+  return /^[=+\-@]/.test(str) ? "'" + str : str;
+}
+
 async function exportAllDataToExcel(){
   const btn = document.getElementById('exportExcelBtn');
   const originalText = btn ? btn.textContent : '';
@@ -3641,7 +3680,7 @@ async function exportAllDataToExcel(){
         const o = doc.data();
         const when = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleString('es-ES') : "";
         const itemsText = (o.items || []).map(it => `${it.qty}x ${it.name}`).join(", ");
-        orderRows.push([o.orderNumber ?? "", when, o.address || "", o.phone || "", o.notes || "", itemsText, o.total || 0, o.completed ? "Sí" : "No"]);
+        orderRows.push([o.orderNumber ?? "", when, sanitizeForSpreadsheet(o.address), sanitizeForSpreadsheet(o.phone), sanitizeForSpreadsheet(o.notes), itemsText, o.total || 0, o.completed ? "Sí" : "No"]);
       });
     } catch(e){
       console.error("No se pudieron exportar los pedidos:", e);
@@ -3885,6 +3924,8 @@ function setLoadingProgress(percent, label){
   renderNav();
   renderMenu();
   updateStatusUI();
+  updateCartBar();
+  renderReceipt();
 
   // If the real data from the database arrives late (after the 15s cutoff above), apply it
   // and re-render automatically — so the site self-corrects instead of staying stuck showing
@@ -3894,6 +3935,8 @@ function setLoadingProgress(percent, label){
     renderNav();
     renderMenu();
     updateStatusUI();
+    updateCartBar();
+    renderReceipt();
   }).catch((e) => console.error("Error cargando datos de la base de datos:", e));
 
   // Photos: wait for them briefly (capped) so the progress bar reflects real work, but never
