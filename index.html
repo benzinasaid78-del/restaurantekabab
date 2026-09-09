@@ -968,7 +968,7 @@
   .closed-notice.show { display: flex; }
   .closed-notice h2 { color: var(--flame); font-size: 40px; margin-bottom: 10px; }
   .closed-notice p { color: var(--muted); font-size: 16px; max-width: 300px; line-height: 1.5; }
-  .closed-notice .icon { font-size: 60px; line-height: 1; margin-bottom: 46px; transform: translate(-10px, -6px); }
+  .closed-notice .icon { line-height: 1; margin-bottom: 30px; display:flex; justify-content:center; }
 
   /* Developer Styles */
   .dev-badge {
@@ -1720,7 +1720,7 @@
 </div>
 
 <div class="closed-notice" id="closedNotice">
-  <div class="icon">🌙</div>
+  <div class="icon"><svg viewBox="0 0 24 24" width="60" height="60" fill="var(--gold)" stroke="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></div>
   <h2 class="display">Cerrado Temporalmente</h2>
   <p>Lo sentimos, nuestro restaurante está cerrado en este momento. ¡Vuelve pronto!</p>
   <button class="btn-small" style="margin-top:20px; padding:10px 30px; background:var(--gold); color:var(--bg); border:none;" onclick="document.getElementById('closedNotice').classList.remove('show')">Ver Menú sin pedir</button>
