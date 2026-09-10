@@ -1604,6 +1604,7 @@
        was printing out as several extra blank pages. display:none removes it from the flow
        entirely, so only the receipt's own height gets printed: one page. */
     body > *:not(#printArea){ display:none !important; }
+    html, body{ min-height:0 !important; height:auto !important; }
     @page{ size:80mm auto; margin:4mm; } /* matches a standard 80mm thermal receipt roll */
     #printArea{
       display:block;
