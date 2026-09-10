@@ -3277,8 +3277,15 @@ function openRatingSheet(itemName){
   // Check if already rated
   const key = 'rated_' + nameToKey(itemName);
   if(localStorage.getItem(key)){
-    showToast("⭐", "Ya has valorado este plato. ¡Gracias!");
-    return;
+    const cloudRating = ratingsCache[itemName];
+    if(cloudRating && cloudRating.count > 0){
+      showToast("⭐", "Ya has valorado este plato. ¡Gracias!");
+      return;
+    }
+    // Flag was set before the database rules were fixed, but the rating never actually
+    // reached the cloud (count is 0 for this item) — it's stale, so clear it and let
+    // the user rate this dish properly now that saving works.
+    localStorage.removeItem(key);
   }
   pendingRatingName = itemName;
   pendingRatingValue = 0;
@@ -4697,6 +4704,7 @@ async function saveAndDownload() {
 function showToast(icon, message, isError){
   const wrap = document.getElementById("appToastWrap");
   if(!wrap) return;
+  wrap.querySelectorAll(".app-toast").forEach(t => t.remove()); // avoid stacking several toasts from rapid repeated taps
   const el = document.createElement("div");
   el.className = "app-toast" + (isError ? " error" : "");
   el.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-text">${message}</span>`;
