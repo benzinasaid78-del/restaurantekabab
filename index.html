@@ -3328,37 +3328,52 @@ function closeRatingSheet(){
 
 function renderRateStars(hovered){
   const row = document.getElementById('rateStarsRow');
-  row.innerHTML = '';
-  [1,2,3,4,5].forEach(i => {
-    const btn = document.createElement('button');
-    btn.className = 'rate-star-btn';
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="${i <= (hovered || pendingRatingValue) ? '#E9AE5C' : '#3A3A42'}" stroke="${i <= (hovered || pendingRatingValue) ? '#E9AE5C' : '#4A4A55'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
-    btn.addEventListener('mouseenter', () => renderRateStars(i));
-    btn.addEventListener('mouseleave', () => renderRateStars(0));
-    btn.addEventListener('click', () => {
-      pendingRatingValue = i;
-      renderRateStars(0);
-      const lbl = document.getElementById('rateLabel');
-      lbl.textContent = RATE_LABELS[i];
-      lbl.className = 'rate-label lit';
-      const sb = document.getElementById('rateSubmitBtn');
-      sb.style.opacity = '1';
-      sb.style.pointerEvents = 'auto';
+  // Build the 5 star buttons only once. Recreating them on every mouseenter/mouseleave (the old
+  // behavior) could destroy the exact button the mouse was pressing down on right as a real
+  // click happened, so the browser never registered the click and the rating silently failed —
+  // this was the actual cause of "I picked 3 stars but the submit button stays disabled".
+  if(row.childElementCount !== 5){
+    row.innerHTML = '';
+    [1,2,3,4,5].forEach(i => {
+      const btn = document.createElement('button');
+      btn.className = 'rate-star-btn';
+      btn.dataset.starValue = i;
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      btn.addEventListener('mouseenter', () => paintRateStars(i));
+      btn.addEventListener('mouseleave', () => paintRateStars(0));
+      btn.addEventListener('click', () => selectRateStar(i));
+      // Touch support
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); selectRateStar(i); }, {passive:false});
+      row.appendChild(btn);
     });
-    // Touch support
-    btn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      pendingRatingValue = i;
-      renderRateStars(0);
-      const lbl = document.getElementById('rateLabel');
-      lbl.textContent = RATE_LABELS[i];
-      lbl.className = 'rate-label lit';
-      const sb = document.getElementById('rateSubmitBtn');
-      sb.style.opacity = '1';
-      sb.style.pointerEvents = 'auto';
-    }, {passive:false});
-    row.appendChild(btn);
+  }
+  paintRateStars(hovered);
+}
+
+// Just updates the fill color of the already-existing star buttons — no DOM rebuild, so it
+// can't interrupt a click in progress.
+function paintRateStars(hovered){
+  const count = hovered || pendingRatingValue;
+  document.querySelectorAll('#rateStarsRow .rate-star-btn').forEach(btn => {
+    const i = Number(btn.dataset.starValue);
+    const lit = i <= count;
+    const poly = btn.querySelector('polygon');
+    poly.setAttribute('fill', lit ? '#E9AE5C' : '#3A3A42');
+    poly.setAttribute('stroke', lit ? '#E9AE5C' : '#4A4A55');
+    poly.setAttribute('stroke-width', '1.5');
+    poly.setAttribute('stroke-linejoin', 'round');
   });
+}
+
+function selectRateStar(i){
+  pendingRatingValue = i;
+  paintRateStars(0);
+  const lbl = document.getElementById('rateLabel');
+  lbl.textContent = RATE_LABELS[i];
+  lbl.className = 'rate-label lit';
+  const sb = document.getElementById('rateSubmitBtn');
+  sb.style.opacity = '1';
+  sb.style.pointerEvents = 'auto';
 }
 
 async function submitRating(){
