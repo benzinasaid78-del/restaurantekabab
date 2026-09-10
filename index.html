@@ -990,6 +990,13 @@
   .closed-notice p { color: var(--muted); font-size: 16px; max-width: 300px; line-height: 1.5; }
   .closed-notice .icon { line-height: 1; margin-bottom: 30px; display:flex; justify-content:center; }
   .closed-notice .icon svg{ width:60px; height:60px; }
+  .closed-notice .closed-hours{
+    color:var(--gold);
+    font-size:15px;
+    font-weight:700;
+    margin-top:14px;
+    font-family:'Space Mono';
+  }
 
   /* Developer Styles */
   .dev-badge {
@@ -1929,6 +1936,7 @@
   <div class="icon"><svg viewBox="0 0 24 24" width="60" height="60" fill="var(--gold)" stroke="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></div>
   <h2 class="display">Cerrado Temporalmente</h2>
   <p>Lo sentimos, nuestro restaurante está cerrado en este momento. ¡Vuelve pronto!</p>
+  <p id="closedScheduleInfo" class="closed-hours" style="display:none;"></p>
   <button class="btn-small" style="margin-top:20px; padding:10px 30px; background:var(--gold); color:var(--bg); border:none;" onclick="document.getElementById('closedNotice').classList.remove('show')">Ver Menú sin pedir</button>
 </div>
 
@@ -2746,7 +2754,7 @@ function showView(name){
   document.querySelectorAll(".bottom-nav .nav-item").forEach(el => {
     el.classList.toggle("active", el.dataset.view === name);
   });
-  if(name === "carrito"){ renderReceipt(); loadReorderCard(); }
+  if(name === "carrito"){ renderReceipt(); loadReorderCard(); prefillSavedAddress(); }
   if(name === "inicio") window.scrollTo({top: 0, behavior: "smooth"});
 }
 
@@ -2809,10 +2817,16 @@ function showOrderConfirmation(orderNumber, addr, total){
 
 function closeConfirmation(){
   document.getElementById("confirmOverlay").classList.remove("show");
-  // Save last order to localStorage so customer can repeat it
-  if(orderItems && orderItems.length){
+  // Save last order to localStorage so the customer can repeat it, and remember their
+  // address/phone (device-only, no account needed) so we can suggest them next time.
+  if(pendingOrder && pendingOrder.orderItems && pendingOrder.orderItems.length){
     try {
-      localStorage.setItem('lastOrder', JSON.stringify({ items: orderItems, savedAt: Date.now() }));
+      localStorage.setItem('lastOrder', JSON.stringify({
+        items: pendingOrder.orderItems,
+        addr: pendingOrder.addr || '',
+        phone: pendingOrder.phone || '',
+        savedAt: Date.now()
+      }));
     } catch(e){}
   }
   pendingOrder = null;
@@ -3181,6 +3195,15 @@ function updateStatusUI() {
 
   if (!effectiveOpen) {
     notice.classList.add('show');
+    const scheduleInfo = document.getElementById('closedScheduleInfo');
+    if (scheduleInfo) {
+      if (AUTO_SCHEDULE) {
+        scheduleInfo.textContent = `Abrimos de ${OPEN_TIME} a ${CLOSE_TIME}`;
+        scheduleInfo.style.display = 'block';
+      } else {
+        scheduleInfo.style.display = 'none';
+      }
+    }
     const badge = document.getElementById('navCartBadge');
     if(badge) badge.style.display = 'none';
   } else {
@@ -3375,6 +3398,21 @@ async function submitRating(){
 //  Last order saved to localStorage after WhatsApp link is clicked.
 //  Restored on cart view open: items re-added if still in menu.
 // ══════════════════════════════════════════════════════════════════
+// Suggests the address/phone the customer used last time (stored only on this device,
+// no account or database involved) so they don't have to retype it every visit.
+function prefillSavedAddress(){
+  const addrEl = document.getElementById("addr");
+  const phoneEl = document.getElementById("phone");
+  if(!addrEl || addrEl.value.trim()) return; // don't overwrite anything the customer already typed
+  try {
+    const raw = localStorage.getItem('lastOrder');
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(saved.addr) addrEl.value = saved.addr;
+    if(saved.phone && phoneEl && !phoneEl.value.trim()) phoneEl.value = saved.phone;
+  } catch(e){}
+}
+
 function loadReorderCard(){
   const card = document.getElementById('reorderCard');
   const preview = document.getElementById('reorderItemsPreview');
