@@ -1599,20 +1599,24 @@
   .sound-preview-btn svg{ width:10px; height:10px; }
   #printArea{ display:none; }
   @media print{
-    body *{ visibility:hidden; }
-    #printArea, #printArea *{ visibility:visible; }
+    /* Actually remove every other top-level section from the page layout instead of just
+       hiding it — visibility:hidden kept the invisible content taking up space, which is what
+       was printing out as several extra blank pages. display:none removes it from the flow
+       entirely, so only the receipt's own height gets printed: one page. */
+    body > *:not(#printArea){ display:none !important; }
+    @page{ size:80mm auto; margin:4mm; } /* matches a standard 80mm thermal receipt roll */
     #printArea{
-      display:block; position:absolute; top:0; left:0; width:100%;
+      display:block;
       font-family:'Work Sans', sans-serif; color:#000; background:#fff;
     }
-    .print-receipt{ max-width:320px; margin:0 auto; padding:16px; }
-    .print-receipt h2{ text-align:center; font-size:20px; margin:0 0 4px; }
-    .print-order-num{ text-align:center; font-weight:bold; font-size:16px; }
-    .print-time{ text-align:center; font-size:12px; color:#333; margin-bottom:8px; }
-    .print-line{ display:flex; justify-content:space-between; font-size:14px; margin:4px 0; }
-    .print-total{ font-weight:bold; font-size:16px; }
-    .print-meta{ font-size:13px; margin:4px 0; }
-    hr{ border:none; border-top:1px dashed #000; margin:8px 0; }
+    .print-receipt{ width:100%; max-width:76mm; margin:0 auto; padding:0; }
+    .print-receipt h2{ text-align:center; font-size:16px; margin:0 0 4px; }
+    .print-order-num{ text-align:center; font-weight:bold; font-size:14px; }
+    .print-time{ text-align:center; font-size:11px; color:#333; margin-bottom:8px; }
+    .print-line{ display:flex; justify-content:space-between; font-size:12px; margin:3px 0; }
+    .print-total{ font-weight:bold; font-size:14px; }
+    .print-meta{ font-size:11px; margin:3px 0; word-wrap:break-word; }
+    hr{ border:none; border-top:1px dashed #000; margin:6px 0; }
   }
 </style>
 </head>
