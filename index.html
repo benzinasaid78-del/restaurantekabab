@@ -2816,6 +2816,14 @@ function removeLogo(){
 }
 
 const LOADING_BG_KEY = "loadingScreenBg";
+// Captured once, right when the script runs (before any database fetch can overwrite it),
+// so "Quitar imagen" can restore this exact built-in photo instead of leaving a blank screen.
+// To swap the built-in default itself, replace the base64 in the <img id="loadingBgImg">
+// tag's src attribute near the top of the page (search for loadingBgImg).
+const DEFAULT_LOADING_BG = (() => {
+  const el = document.getElementById('loadingBgImg');
+  return el ? el.src : "";
+})();
 
 function handleLoadingBgUpload(event){
   const file = event.target.files[0];
@@ -2868,7 +2876,11 @@ function handleLoadingBgUpload(event){
 function removeLoadingBg(){
   delete IMAGES[LOADING_BG_KEY];
   updateLoadingBgPreview();
-  applyLoadingBgImage("");
+  applyLoadingBgImage(DEFAULT_LOADING_BG); // restore the built-in default instead of leaving it blank
+  // saveToFirestore() only ever writes keys still present in IMAGES, it never deletes ones that
+  // were removed — so without this, the old custom image would keep coming back after a reload.
+  db.collection("restaurant_images").doc(LOADING_BG_KEY).delete()
+    .catch(e => console.warn("No se pudo borrar la imagen de fondo guardada:", e));
 }
 
 function updateLoadingBgPreview(){
