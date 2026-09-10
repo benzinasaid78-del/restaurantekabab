@@ -2448,7 +2448,7 @@ function renderMenu(){
       row.innerHTML = `
         ${featuredBadge}
         ${imgBlock}
-        <div class="item-info" onclick="openRatingSheet('${it.name.replace(/'/g, '\\'')}')" style="cursor:pointer;">
+        <div class="item-info" onclick="openRatingSheet(this.dataset.name)" data-name="${it.name}" style="cursor:pointer;">
           <span class="name">${it.name}</span>
           ${it.desc ? `<div class="desc">${it.desc}</div>` : ""}
           <span class="price">${it.variants ? "Desde " + fmt(Math.min(...it.variants.map(v=>v.price))) : fmt(it.price)}</span>
