@@ -1964,8 +1964,8 @@
   <label for="addr">Dirección de entrega *</label>
   <input id="addr" type="text" placeholder="Calle, número, piso, ciudad">
 
-  <label for="phone">Teléfono de contacto</label>
-  <input id="phone" type="tel" placeholder="Opcional">
+  <label for="phone">Teléfono de contacto *</label>
+  <input id="phone" type="tel" placeholder="Ej: 612 345 678">
 
   <label for="notes">Notas del pedido</label>
   <textarea id="notes" placeholder="Sin cebolla, timbre roto, etc. (opcional)"></textarea>
@@ -2817,18 +2817,6 @@ function showOrderConfirmation(orderNumber, addr, total){
 
 function closeConfirmation(){
   document.getElementById("confirmOverlay").classList.remove("show");
-  // Save last order to localStorage so the customer can repeat it, and remember their
-  // address/phone (device-only, no account needed) so we can suggest them next time.
-  if(pendingOrder && pendingOrder.orderItems && pendingOrder.orderItems.length){
-    try {
-      localStorage.setItem('lastOrder', JSON.stringify({
-        items: pendingOrder.orderItems,
-        addr: pendingOrder.addr || '',
-        phone: pendingOrder.phone || '',
-        savedAt: Date.now()
-      }));
-    } catch(e){}
-  }
   pendingOrder = null;
 }
 
@@ -2878,6 +2866,17 @@ async function markOrderAsSent(){
     });
     lastOrderNumber = orderNumber;
     document.getElementById("trackThisOrderBtn").style.display = "block";
+    // Remember the address/phone/notes on this device (no account needed) so next time —
+    // even days or weeks later — the checkout fields are pre-filled automatically. Saved here
+    // (once the order is confirmed recorded) rather than only when closing the confirmation
+    // screen, since a customer who goes straight to WhatsApp without tapping "Cerrar" would
+    // otherwise never have it remembered.
+    try {
+      localStorage.setItem('lastOrder', JSON.stringify({
+        items: orderItems, addr: addr || '', phone: phone || '', notes: notes || '',
+        savedAt: Date.now()
+      }));
+    } catch(e){}
   } catch(e){
     console.error("No se pudo guardar el pedido en el historial:", e);
   }
@@ -2903,8 +2902,14 @@ async function sendOrder(){
     return;
   }
 
-  const notes = notesEl.value.trim();
   const phone = phoneEl.value.trim();
+  if(!phone){
+    phoneEl.focus();
+    phoneEl.style.borderColor = "var(--flame)";
+    return;
+  }
+
+  const notes = notesEl.value.trim();
   const entries = Object.entries(cart);
   const {subtotal, discount, total} = cartTotals();
   const discountCode = appliedDiscount ? appliedDiscount.code : null;
@@ -3418,6 +3423,7 @@ async function submitRating(){
 function prefillSavedAddress(){
   const addrEl = document.getElementById("addr");
   const phoneEl = document.getElementById("phone");
+  const notesEl = document.getElementById("notes");
   if(!addrEl || addrEl.value.trim()) return; // don't overwrite anything the customer already typed
   try {
     const raw = localStorage.getItem('lastOrder');
@@ -3425,6 +3431,7 @@ function prefillSavedAddress(){
     const saved = JSON.parse(raw);
     if(saved.addr) addrEl.value = saved.addr;
     if(saved.phone && phoneEl && !phoneEl.value.trim()) phoneEl.value = saved.phone;
+    if(saved.notes && notesEl && !notesEl.value.trim()) notesEl.value = saved.notes;
   } catch(e){}
 }
 
