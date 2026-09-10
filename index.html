@@ -1293,6 +1293,19 @@
   .variant-size-header:first-child{ margin-top:0; }
   .variant-subrow{ margin-left:10px; border-style:dashed; }
 
+  .customize-option-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; margin-bottom:10px;
+    font-size:15px; color:var(--cream); cursor:pointer;
+  }
+  .customize-option-row input{ width:20px; height:20px; accent-color:var(--flame); flex-shrink:0; }
+  .customize-extra-price{ font-family:'Space Mono'; font-size:13px; color:var(--gold); }
+  .customize-footer{
+    display:flex; align-items:center; gap:10px;
+    padding-top:12px; border-top:1px solid var(--line);
+  }
+
   .variant-admin-list{display:flex; flex-direction:column; gap:6px; margin-top:6px;}
   .variant-admin-row{display:flex; gap:6px; align-items:center;}
   .variant-admin-row input{margin:0;}
@@ -2014,6 +2027,28 @@
   </div>
 </div>
 
+<div class="overlay" id="customizeOverlay" onclick="if(event.target===this) closeCustomizeSheet()">
+  <div class="sheet variant-sheet">
+    <button class="close-btn" onclick="closeCustomizeSheet()">✕</button>
+    <div class="sheet-handle"></div>
+    <div class="variant-sheet-scroll">
+      <h3 class="display" id="customizeTitle">Personaliza tu plato</h3>
+      <div class="subhead">Elige tus opciones antes de añadir al carrito</div>
+      <div id="customizeOptionsList"></div>
+    </div>
+    <div class="customize-footer">
+      <div class="stepper">
+        <button onclick="changeCustomizeQty(-1)">−</button>
+        <span class="qty" id="customizeQty">1</span>
+        <button onclick="changeCustomizeQty(1)">+</button>
+      </div>
+      <button class="send-btn variant-done-btn" style="flex:1;" onclick="confirmCustomizeSheet()">
+        Añadir · <span id="customizeTotalPrice">0,00€</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="confirmActionOverlay" onclick="if(event.target===this) closeConfirmAction()">
   <div class="sheet" style="text-align:center;">
     <button class="close-btn" onclick="closeConfirmAction()">✕</button>
@@ -2518,6 +2553,18 @@ function renderControl(it){
     return;
   }
 
+  if(hasCustomization(it)){
+    const total = Object.keys(registry)
+      .filter(k => registry[k].baseId === it.id)
+      .reduce((s,k) => s + (cart[k] || 0), 0);
+    if(total === 0){
+      el.innerHTML = `<button class="add-btn" onclick="openCustomizeSheet('${it.id}')">+</button>`;
+    } else {
+      el.innerHTML = `<button class="add-btn" style="width:auto; min-width:34px; padding:0 10px; font-family:'Space Mono'; font-size:14px;" onclick="openCustomizeSheet('${it.id}')">${total}</button>`;
+    }
+    document.getElementById("row-" + it.id).classList.toggle("in-cart", total > 0);
+    return;
+  }
   if(it.variants){
     const total = it.variants.reduce((s,v) => s + (cart[v.id] || 0), 0);
     if(total === 0){
@@ -2662,6 +2709,146 @@ function pruneInvalidCartItems(){
   Object.keys(cart).forEach(id => {
     if(!registry[id]) delete cart[id];
   });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  ITEM CUSTOMIZATION (removals, paid extras, spice level)
+//  A customized pick is registered as its own composite registry entry — same trick the
+//  "variants" (sizes) system already uses — so the rest of the cart/receipt/order/WhatsApp
+//  message logic needs zero changes: it just sees another item with a name and a price.
+// ══════════════════════════════════════════════════════════════════
+function hasCustomization(it){
+  return !!((it.removals && it.removals.length) || (it.extras && it.extras.length) || (it.spiceLevels && it.spiceLevels.length));
+}
+
+let currentCustomizeItemId = null;
+let customizeSelection = { removals: [], extras: [], spice: null, qty: 1 };
+
+function openCustomizeSheet(itemId){
+  currentCustomizeItemId = itemId;
+  customizeSelection = { removals: [], extras: [], spice: null, qty: 1 };
+  renderCustomizeSheet();
+  document.getElementById("customizeOverlay").classList.add("show");
+}
+
+function closeCustomizeSheet(){
+  document.getElementById("customizeOverlay").classList.remove("show");
+  currentCustomizeItemId = null;
+}
+
+function toggleCustomizeRemoval(name){
+  const i = customizeSelection.removals.indexOf(name);
+  if(i === -1) customizeSelection.removals.push(name); else customizeSelection.removals.splice(i, 1);
+  renderCustomizeSheet();
+}
+
+function toggleCustomizeExtra(name){
+  const i = customizeSelection.extras.indexOf(name);
+  if(i === -1) customizeSelection.extras.push(name); else customizeSelection.extras.splice(i, 1);
+  renderCustomizeSheet();
+}
+
+function setCustomizeSpice(name){
+  customizeSelection.spice = (customizeSelection.spice === name) ? null : name;
+  renderCustomizeSheet();
+}
+
+function changeCustomizeQty(delta){
+  customizeSelection.qty = Math.max(1, customizeSelection.qty + delta);
+  renderCustomizeSheet();
+}
+
+function renderCustomizeSheet(){
+  const it = findItem(currentCustomizeItemId);
+  if(!it) return;
+  document.getElementById("customizeTitle").textContent = it.name;
+  const box = document.getElementById("customizeOptionsList");
+  let html = "";
+
+  if(it.removals && it.removals.length){
+    html += `<div class="variant-size-header">Quitar</div>`;
+    it.removals.forEach(name => {
+      const checked = customizeSelection.removals.includes(name);
+      html += `
+        <label class="customize-option-row">
+          <span>${escapeHtml(name)}</span>
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCustomizeRemoval('${name.replace(/'/g,"\\'")}')">
+        </label>`;
+    });
+  }
+
+  if(it.extras && it.extras.length){
+    html += `<div class="variant-size-header">Extras</div>`;
+    it.extras.forEach(ex => {
+      const checked = customizeSelection.extras.includes(ex.name);
+      html += `
+        <label class="customize-option-row">
+          <span>${escapeHtml(ex.name)} <span class="customize-extra-price">+${fmt(ex.price)}</span></span>
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCustomizeExtra('${ex.name.replace(/'/g,"\\'")}')">
+        </label>`;
+    });
+  }
+
+  if(it.spiceLevels && it.spiceLevels.length){
+    html += `<div class="variant-size-header">Nivel de picante</div>`;
+    it.spiceLevels.forEach(name => {
+      const checked = customizeSelection.spice === name;
+      html += `
+        <label class="customize-option-row">
+          <span>${escapeHtml(name)}</span>
+          <input type="radio" name="customizeSpice" ${checked ? 'checked' : ''} onchange="setCustomizeSpice('${name.replace(/'/g,"\\'")}')">
+        </label>`;
+    });
+  }
+
+  box.innerHTML = html;
+
+  const extraTotal = customizeSelection.extras.reduce((s, name) => {
+    const ex = (it.extras || []).find(e => e.name === name);
+    return s + (ex ? ex.price : 0);
+  }, 0);
+  const unitPrice = (it.price || 0) + extraTotal;
+  document.getElementById("customizeQty").textContent = customizeSelection.qty;
+  document.getElementById("customizeTotalPrice").textContent = fmt(unitPrice * customizeSelection.qty);
+}
+
+// Builds a stable id from the chosen options so re-picking the exact same combination
+// (e.g. two separate "no onion, extra cheese" burgers) merges into one cart line instead of
+// creating a duplicate — same idea as how a normal item id already works.
+function slugifyOptionKey(s){
+  return s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_');
+}
+
+function confirmCustomizeSheet(){
+  const it = findItem(currentCustomizeItemId);
+  if(!it) return;
+
+  const removals = [...customizeSelection.removals].sort();
+  const extras = [...customizeSelection.extras].sort();
+  const spice = customizeSelection.spice;
+
+  const comboKey = it.id + '__' + slugifyOptionKey(removals.join('-')) + '__' + slugifyOptionKey(extras.join('-')) + '__' + slugifyOptionKey(spice || '');
+
+  const extraTotal = extras.reduce((s, name) => {
+    const ex = (it.extras || []).find(e => e.name === name);
+    return s + (ex ? ex.price : 0);
+  }, 0);
+
+  const descParts = [];
+  if(removals.length) descParts.push('Sin: ' + removals.join(', '));
+  if(extras.length) descParts.push('Extra: ' + extras.join(', '));
+  if(spice) descParts.push(spice);
+  const label = descParts.length ? ` (${descParts.join(' · ')})` : '';
+
+  registry[comboKey] = {
+    kind: "custom", name: it.name + label, price: (it.price || 0) + extraTotal, baseId: it.id, item: it
+  };
+  cart[comboKey] = (cart[comboKey] || 0) + customizeSelection.qty;
+
+  renderControl(it);
+  updateCartBar();
+  renderReceipt();
+  closeCustomizeSheet();
 }
 
 function cartTotals(){
@@ -4375,6 +4562,22 @@ function renderAdminPanel() {
               <label>Descripción</label>
               <input type="text" class="item-desc" value="${item.desc || ''}">
             </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label>Opciones para quitar (separadas por coma, ej: Sin cebolla, Sin tomate)</label>
+            <input type="text" value="${(item.removals || []).join(', ')}"
+              onchange="menuData[${catIdx}].items[${itemIdx}].removals = this.value.split(',').map(s=>s.trim()).filter(Boolean);">
+          </div>
+          <div style="margin-top:10px;">
+            <label>Extras de pago (formato Nombre:precio, ej: Extra queso:1, Extra bacon:1.5)</label>
+            <input type="text" value="${(item.extras || []).map(e => e.name + ':' + e.price).join(', ')}"
+              onchange="menuData[${catIdx}].items[${itemIdx}].extras = this.value.split(',').map(s=>s.trim()).filter(Boolean).map(s=>{const parts=s.split(':'); return {name:(parts[0]||'').trim(), price:parseFloat(parts[1])||0};});">
+          </div>
+          <div style="margin-top:10px;">
+            <label>Niveles de picante (separados por coma, ej: Suave, Media, Picante)</label>
+            <input type="text" value="${(item.spiceLevels || []).join(', ')}"
+              onchange="menuData[${catIdx}].items[${itemIdx}].spiceLevels = this.value.split(',').map(s=>s.trim()).filter(Boolean);">
           </div>
           
           <div class="img-preview-container">
