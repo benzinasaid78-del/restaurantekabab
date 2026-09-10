@@ -1418,6 +1418,77 @@
     flex:1; text-align:center; font-size:8.5px; color:var(--muted); font-family:'Space Mono';
   }
   .stats-empty{ color:var(--muted); text-align:center; padding:30px 0; font-size:13px; }
+
+  /* ── Sound Alert Selector ── */
+  .sound-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:10px;
+  }
+  .sound-card{
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:10px 10px 8px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    transition:border-color .15s, background .15s;
+    position:relative;
+    text-align:center;
+    user-select:none;
+  }
+  .sound-card.active{
+    border-color:var(--flame);
+    background:rgba(240,69,59,0.08);
+  }
+  .sound-card .snd-icon{
+    font-size:22px;
+    line-height:1;
+  }
+  .sound-card .snd-name{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--cream);
+    line-height:1.2;
+  }
+  .sound-card .snd-desc{
+    font-size:10px;
+    color:var(--muted);
+    line-height:1.2;
+  }
+  .sound-card .snd-badge{
+    position:absolute;
+    top:6px; right:6px;
+    width:14px; height:14px;
+    border-radius:50%;
+    background:var(--flame);
+    display:none;
+    align-items:center;
+    justify-content:center;
+  }
+  .sound-card.active .snd-badge{ display:flex; }
+  .sound-card .snd-badge svg{ width:8px; height:8px; }
+  .sound-preview-btn{
+    margin-top:4px;
+    background:var(--card-hi);
+    border:1px solid var(--line);
+    border-radius:999px;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:600;
+    padding:3px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    transition:color .12s, border-color .12s;
+  }
+  .sound-preview-btn:active{ color:var(--gold); border-color:var(--gold); }
+  .sound-preview-btn svg{ width:10px; height:10px; }
 </style>
 </head>
 <body>
@@ -1711,6 +1782,19 @@
           <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:10px;">Borra todas las fotos guardadas en la base de datos (todos los productos se quedarán sin foto). Útil para empezar de cero y liberar espacio. Esta acción no se puede deshacer.</p>
           <button class="btn-small" style="background:#ff0055; color:white; width:100%;" onclick="clearAllStoredImages()">🗑️ Borrar todas las imágenes guardadas</button>
         </div>
+      </div>
+
+      <!-- ══ Sound Alert Selector ══ -->
+      <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
+        <label style="margin-top:0;">🔔 Sonido de alerta para nuevos pedidos</label>
+        <p style="font-size:11px; color:var(--muted); margin-bottom:12px; margin-top:4px;">Elige el sonido que suena cuando llega un pedido nuevo. Pulsa <b>▶</b> para escucharlo antes de elegir.</p>
+        <div class="sound-grid" id="soundGrid"></div>
+        <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <label style="margin:0; font-size:12px; color:var(--gold); font-weight:600; text-transform:uppercase; letter-spacing:.4px;">Volumen</label>
+          <input type="range" id="alertVolumeSlider" min="1" max="10" value="7" step="1" style="flex:1; min-width:100px; margin:0;" oninput="document.getElementById('alertVolumeVal').textContent=this.value">
+          <span id="alertVolumeVal" style="font-family:'Space Mono'; font-size:13px; color:var(--cream); min-width:16px;">7</span>
+        </div>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px; margin-bottom:0;">* El ajuste de volumen no afecta el volumen del sistema — súbelo en el móvil si no se escucha bien.</p>
       </div>
 
       <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; margin-bottom:16px; background:var(--card-hi);">
@@ -2061,6 +2145,8 @@ async function loadFromFirestore(){
       if(typeof s.RESTAURANT_LOGO === "string") RESTAURANT_LOGO = s.RESTAURANT_LOGO;
       if(typeof s.RESTAURANT_EYEBROW === "string") RESTAURANT_EYEBROW = s.RESTAURANT_EYEBROW;
       if(typeof s.IMGBB_API_KEY === "string") IMGBB_API_KEY = s.IMGBB_API_KEY;
+      if(typeof s.ALERT_SOUND_ID === "string" && ALERT_SOUNDS.find(x=>x.id===s.ALERT_SOUND_ID)) ALERT_SOUND_ID = s.ALERT_SOUND_ID;
+      if(typeof s.ALERT_VOLUME === "number") ALERT_VOLUME = Math.min(10, Math.max(1, s.ALERT_VOLUME));
       updateLogoDisplay();
       updateEyebrowDisplay();
       if(s.RESTAURANT_NAME) document.getElementById('mainTitle').innerHTML = s.RESTAURANT_NAME.replace(' ', ' <span>') + '</span>';
@@ -2137,6 +2223,8 @@ async function saveToFirestore(){
     RESTAURANT_LOGO,
     RESTAURANT_EYEBROW,
     IMGBB_API_KEY,
+    ALERT_SOUND_ID,
+    ALERT_VOLUME,
     RESTAURANT_NAME: document.getElementById('mainTitle').innerText,
     RESTAURANT_SUB: document.querySelector('p.sub').innerText,
     MAPS_URL: document.querySelector('.location-link').getAttribute('href'),
@@ -3021,31 +3109,296 @@ function unlockAudio(){
   } catch(e){}
 }
 
-// Plays a longer, more insistent alert (~3.5s, repeats the chime 3 times) using a harsher
-// square wave instead of a soft sine tone — cuts through noisy kitchen background sound much
-// better and gives the cook enough time to notice it even if they're not near the screen.
-function playOrderAlert(){
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    const now = audioCtx.currentTime;
-    const cycleDuration = 1.15; // one "ding-dong" + gap before repeating
-    const cycles = 3;
-    for(let c = 0; c < cycles; c++){
-      const base = now + c * cycleDuration;
-      [{freq:880, start:0, dur:0.32}, {freq:1175, start:0.30, dur:0.42}].forEach(tone => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "square";
-        osc.frequency.value = tone.freq;
-        gain.gain.setValueAtTime(0, base + tone.start);
-        gain.gain.linearRampToValueAtTime(0.35, base + tone.start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, base + tone.start + tone.dur);
-        osc.connect(gain).connect(audioCtx.destination);
-        osc.start(base + tone.start);
-        osc.stop(base + tone.start + tone.dur + 0.05);
+// ══════════════════════════════════════════════════════════════════
+//  SOUND ALERT SYSTEM
+//  10 alert sounds, all generated with Web Audio API (no files).
+//  ALERT_SOUND_ID  → which sound is selected (persisted in Firebase)
+//  ALERT_VOLUME    → 1-10 gain multiplier
+// ══════════════════════════════════════════════════════════════════
+let ALERT_SOUND_ID = "kitchen_bell";  // default
+let ALERT_VOLUME   = 7;               // 1-10
+
+const ALERT_SOUNDS = [
+  {
+    id: "kitchen_bell",
+    name: "Campana de cocina",
+    desc: "Ding-dong clásico · 3×",
+    icon: "🔔",
+    play(ctx, vol, t){
+      // ding (880 Hz) → dong (659 Hz), repeated 3 times
+      [[880,0],[659,0.28]].forEach(([f,off]) => {
+        for(let i=0;i<3;i++){
+          const base = t + i*1.1 + off;
+          const osc = ctx.createOscillator(); const g = ctx.createGain();
+          osc.type="sine"; osc.frequency.value=f;
+          g.gain.setValueAtTime(0, base);
+          g.gain.linearRampToValueAtTime(vol*0.42, base+0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, base+0.55);
+          osc.connect(g).connect(ctx.destination);
+          osc.start(base); osc.stop(base+0.6);
+        }
       });
     }
+  },
+  {
+    id: "alarm_siren",
+    name: "Sirena urgente",
+    desc: "Frecuencia ascendente · muy insistente",
+    icon: "🚨",
+    play(ctx, vol, t){
+      // rising sweep × 4 bursts
+      for(let i=0;i<4;i++){
+        const base = t + i*0.85;
+        const osc = ctx.createOscillator(); const g = ctx.createGain();
+        osc.type="sawtooth";
+        osc.frequency.setValueAtTime(400, base);
+        osc.frequency.linearRampToValueAtTime(1100, base+0.4);
+        g.gain.setValueAtTime(0, base);
+        g.gain.linearRampToValueAtTime(vol*0.30, base+0.05);
+        g.gain.setValueAtTime(vol*0.30, base+0.38);
+        g.gain.linearRampToValueAtTime(0, base+0.45);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(base); osc.stop(base+0.5);
+      }
+    }
+  },
+  {
+    id: "cash_register",
+    name: "Caja registradora",
+    desc: "¡Cha-ching! · sonido de venta",
+    icon: "💰",
+    play(ctx, vol, t){
+      // high ping + lower resolution tone
+      [[1760,0,0.15],[880,0.13,0.25],[1318,0.22,0.35]].forEach(([f,off,dur])=>{
+        const osc = ctx.createOscillator(); const g = ctx.createGain();
+        osc.type="triangle"; osc.frequency.value=f;
+        const s=t+off;
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.38,s+0.01);
+        g.gain.exponentialRampToValueAtTime(0.001,s+dur);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(s); osc.stop(s+dur+0.05);
+      });
+    }
+  },
+  {
+    id: "triple_beep",
+    name: "Triple pitido",
+    desc: "Bip-bip-bip · claro y directo",
+    icon: "📟",
+    play(ctx, vol, t){
+      for(let i=0;i<3;i++){
+        const s=t+i*0.28;
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="square"; osc.frequency.value=1200;
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.22,s+0.01);
+        g.gain.setValueAtTime(vol*0.22,s+0.14);
+        g.gain.linearRampToValueAtTime(0,s+0.18);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(s); osc.stop(s+0.2);
+      }
+    }
+  },
+  {
+    id: "success_fanfare",
+    name: "Fanfarria",
+    desc: "Melodía ascendente · festiva",
+    icon: "🎺",
+    play(ctx, vol, t){
+      // C4-E4-G4-C5 quick arpeggio
+      [261.6,329.6,392,523.3].forEach((f,i)=>{
+        const s=t+i*0.13;
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="triangle"; osc.frequency.value=f;
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.32,s+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,s+0.28);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(s); osc.stop(s+0.3);
+      });
+      // final chord sustain
+      [523.3,659.3,784].forEach(f=>{
+        const s=t+0.55;
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="sine"; osc.frequency.value=f;
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.18,s+0.04);
+        g.gain.exponentialRampToValueAtTime(0.001,s+0.6);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(s); osc.stop(s+0.65);
+      });
+    }
+  },
+  {
+    id: "doorbell",
+    name: "Timbre de puerta",
+    desc: "Don-dan · suave y claro",
+    icon: "🚪",
+    play(ctx, vol, t){
+      [[349.2,0],[293.7,0.32]].forEach(([f,off])=>{
+        const s=t+off;
+        // slight vibrato via FM
+        const mod=ctx.createOscillator(); const modG=ctx.createGain();
+        mod.frequency.value=5; modG.gain.value=8;
+        mod.connect(modG);
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="sine"; osc.frequency.value=f;
+        modG.connect(osc.frequency);
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.45,s+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,s+0.9);
+        osc.connect(g).connect(ctx.destination);
+        mod.start(s); osc.start(s); osc.stop(s+1); mod.stop(s+1);
+      });
+    }
+  },
+  {
+    id: "military_alert",
+    name: "Alerta militar",
+    desc: "Señal de radio · máxima urgencia",
+    icon: "⚡",
+    play(ctx, vol, t){
+      // rapid staccato pulses at two alternating freqs
+      const freqs=[800,1000];
+      for(let i=0;i<8;i++){
+        const s=t+i*0.18;
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="square"; osc.frequency.value=freqs[i%2];
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.25,s+0.01);
+        g.gain.setValueAtTime(vol*0.25,s+0.10);
+        g.gain.linearRampToValueAtTime(0,s+0.14);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(s); osc.stop(s+0.16);
+      }
+    }
+  },
+  {
+    id: "chime_marimba",
+    name: "Marimba tropical",
+    desc: "Notas cálidas · ambiente festivo",
+    icon: "🎵",
+    play(ctx, vol, t){
+      // C5-G5-E5-C6 marimba-like (triangle + quick decay)
+      [523.3,784,659.3,1046.5].forEach((f,i)=>{
+        const s=t+i*0.22;
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="triangle"; osc.frequency.value=f;
+        // add a tiny sub for warmth
+        const sub=ctx.createOscillator(); const subG=ctx.createGain();
+        sub.type="sine"; sub.frequency.value=f/2;
+        subG.gain.setValueAtTime(0,s);
+        subG.gain.linearRampToValueAtTime(vol*0.08,s+0.01);
+        subG.gain.exponentialRampToValueAtTime(0.001,s+0.22);
+        sub.connect(subG).connect(ctx.destination);
+        sub.start(s); sub.stop(s+0.25);
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(vol*0.30,s+0.01);
+        g.gain.exponentialRampToValueAtTime(0.001,s+0.38);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(s); osc.stop(s+0.42);
+      });
+    }
+  },
+  {
+    id: "deep_gong",
+    name: "Gong profundo",
+    desc: "Sonido grave y resonante · 2×",
+    icon: "🥁",
+    play(ctx, vol, t){
+      [0, 1.4].forEach(off=>{
+        const s=t+off;
+        // fundamental + detuned overtone for metallic feel
+        [[110,1],[137.5,0.4],[165,0.2]].forEach(([f,rel])=>{
+          const osc=ctx.createOscillator(); const g=ctx.createGain();
+          osc.type="sine"; osc.frequency.value=f;
+          g.gain.setValueAtTime(0,s);
+          g.gain.linearRampToValueAtTime(vol*0.38*rel,s+0.03);
+          g.gain.exponentialRampToValueAtTime(0.001,s+1.1);
+          osc.connect(g).connect(ctx.destination);
+          osc.start(s); osc.stop(s+1.2);
+        });
+      });
+    }
+  },
+  {
+    id: "power_chord",
+    name: "Power chord",
+    desc: "Acorde de guitarra · potente y moderno",
+    icon: "🎸",
+    play(ctx, vol, t){
+      // E power chord (E2-B2-E3-B3) with distortion-like waveshaper
+      const ws=ctx.createWaveShaper();
+      const curve=new Float32Array(256);
+      for(let i=0;i<256;i++){const x=i*2/256-1; curve[i]=x<0?-Math.pow(-x,0.6):Math.pow(x,0.6);}
+      ws.curve=curve; ws.connect(ctx.destination);
+      [82.4,123.5,164.8,246.9].forEach((f,i)=>{
+        const osc=ctx.createOscillator(); const g=ctx.createGain();
+        osc.type="sawtooth"; osc.frequency.value=f;
+        g.gain.setValueAtTime(0,t);
+        g.gain.linearRampToValueAtTime(vol*0.14,t+0.04);
+        g.gain.exponentialRampToValueAtTime(0.001,t+1.0);
+        osc.connect(g).connect(ws);
+        osc.start(t); osc.stop(t+1.1);
+      });
+    }
+  }
+];
+
+// Renders the sound picker grid in the admin settings panel
+function renderSoundGrid(){
+  const grid = document.getElementById("soundGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  ALERT_SOUNDS.forEach(snd => {
+    const card = document.createElement("div");
+    card.className = "sound-card" + (snd.id === ALERT_SOUND_ID ? " active" : "");
+    card.id = "sound-card-" + snd.id;
+    card.innerHTML = `
+      <div class="snd-badge"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="snd-icon">${snd.icon}</div>
+      <div class="snd-name">${snd.name}</div>
+      <div class="snd-desc">${snd.desc}</div>
+      <button class="sound-preview-btn" onclick="event.stopPropagation(); previewSound('${snd.id}')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Escuchar
+      </button>
+    `;
+    card.onclick = () => selectAlertSound(snd.id);
+    grid.appendChild(card);
+  });
+  // Sync volume slider
+  const slider = document.getElementById("alertVolumeSlider");
+  const val    = document.getElementById("alertVolumeVal");
+  if(slider){ slider.value = ALERT_VOLUME; }
+  if(val)   { val.textContent = ALERT_VOLUME; }
+}
+
+function selectAlertSound(id){
+  ALERT_SOUND_ID = id;
+  document.querySelectorAll(".sound-card").forEach(c => c.classList.remove("active"));
+  const target = document.getElementById("sound-card-" + id);
+  if(target) target.classList.add("active");
+}
+
+function previewSound(id){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    const snd = ALERT_SOUNDS.find(s => s.id === id);
+    const vol = (parseInt(document.getElementById("alertVolumeSlider")?.value) || ALERT_VOLUME) / 10;
+    if(snd) snd.play(audioCtx, vol, audioCtx.currentTime + 0.05);
+  } catch(e){ console.error("Error previewing sound:", e); }
+}
+
+function playOrderAlert(){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    const snd = ALERT_SOUNDS.find(s => s.id === ALERT_SOUND_ID) || ALERT_SOUNDS[0];
+    const vol = ALERT_VOLUME / 10;
+    snd.play(audioCtx, vol, audioCtx.currentTime + 0.05);
   } catch(e){ console.error("No se pudo reproducir el sonido de alerta:", e); }
 }
 
@@ -3511,6 +3864,9 @@ function loadSettings() {
     removeBtn.style.display = 'none';
   }
   updateLoadingBgPreview();
+
+  // Sound alert picker
+  renderSoundGrid();
 
   const devSec = document.getElementById('devSection');
   if (IS_DEVELOPER) {
@@ -3996,6 +4352,11 @@ async function saveAndDownload() {
   if (IS_DEVELOPER) {
     IS_LOCKED = document.getElementById('set-is-locked').checked;
   }
+
+  // Sound alert settings
+  const volSlider = document.getElementById("alertVolumeSlider");
+  if(volSlider) ALERT_VOLUME = parseInt(volSlider.value) || 7;
+  // ALERT_SOUND_ID is already updated live via selectAlertSound()
 
   // Re-render main site
   updateStatusUI();
