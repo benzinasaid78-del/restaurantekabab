@@ -475,6 +475,21 @@
       border-radius: 20px;
     }
   }
+  .variant-sheet{
+    display:flex;
+    flex-direction:column;
+    padding-bottom:16px;
+    overflow-y:hidden;
+  }
+  .variant-sheet-scroll{
+    overflow-y:auto;
+    flex:1 1 auto;
+    min-height:0;
+  }
+  .variant-done-btn{
+    flex-shrink:0;
+    margin-top:16px;
+  }
   .sheet-handle{
     width:40px; height:4px;
     background:var(--line);
@@ -1757,13 +1772,18 @@
 
 <div class="overlay" id="variantOverlay" onclick="if(event.target===this) closeVariantSheet(false)">
 
-  <div class="sheet">
+  <div class="sheet variant-sheet">
     <button class="close-btn" onclick="closeVariantSheet(false)">✕</button>
     <div class="sheet-handle"></div>
-    <h3 class="display" id="variantTitle">Elige el tamaño</h3>
-    <div class="subhead">Puedes añadir varios tamaños del mismo plato</div>
-    <div id="variantList"></div>
-    <button class="send-btn" onclick="closeVariantSheet(true)">✅ Listo</button>
+    <div class="variant-sheet-scroll">
+      <h3 class="display" id="variantTitle">Elige el tamaño</h3>
+      <div class="subhead">Puedes añadir varios tamaños del mismo plato</div>
+      <div id="variantList"></div>
+    </div>
+    <button class="send-btn variant-done-btn" onclick="closeVariantSheet(true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px; vertical-align:-2px; margin-right:4px;"><path d="M20 6 9 17l-5-5"/></svg>
+      Listo
+    </button>
   </div>
 </div>
 
