@@ -450,7 +450,7 @@
     display:none;
     align-items:flex-end;
     justify-content:center;
-    z-index:30;
+    z-index:60; /* must beat .bottom-nav (50) so sheets never render partially behind it */
     padding: 20px;
   }
   .overlay.show{display:flex;}
