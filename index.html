@@ -722,6 +722,16 @@
     border-radius:999px;
     padding:3px 9px;
   }
+  .order-scheduled-banner{
+    background:var(--gold);
+    color:var(--bg);
+    font-weight:700;
+    font-size:12.5px;
+    text-align:center;
+    padding:6px 10px;
+    border-radius:8px;
+    margin:8px 0;
+  }
   .order-done-toggle{
     display:flex; align-items:center; gap:6px;
     font-size:12.5px; color:var(--muted); cursor:pointer;
@@ -1498,6 +1508,43 @@
     color:var(--gold);
   }
   .reorder-icon svg{ width:18px; height:18px; }
+  .schedule-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    margin:0 0 18px;
+  }
+  .schedule-toggle{
+    display:flex;
+    gap:8px;
+  }
+  .schedule-btn{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    background:var(--card-hi);
+    border:1px solid var(--line);
+    color:var(--muted);
+    font-size:12.5px;
+    font-weight:600;
+    padding:10px 6px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .schedule-btn svg{ width:15px; height:15px; flex-shrink:0; }
+  .schedule-btn.active{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:var(--bg);
+  }
+  #scheduleTimeWrap select{
+    width:100%;
+    margin-top:4px;
+  }
   .reorder-info{ flex:1; min-width:0; }
   .reorder-title{
     font-size:13px;
@@ -1983,6 +2030,24 @@
 
   <div class="receipt" id="receipt"></div>
 
+  <div class="schedule-card">
+    <div class="schedule-toggle">
+      <button type="button" class="schedule-btn active" id="scheduleBtnAsap" onclick="setScheduleMode('asap')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+        Lo antes posible
+      </button>
+      <button type="button" class="schedule-btn" id="scheduleBtnLater" onclick="setScheduleMode('later')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+        Programar hora
+      </button>
+    </div>
+    <div id="scheduleTimeWrap" style="display:none;">
+      <label for="scheduleTimeInput" style="margin-top:12px;">¿A qué hora quieres recibirlo?</label>
+      <select id="scheduleTimeInput" onchange="scheduledTime = this.value"></select>
+      <p class="hint" id="scheduleTimeHint" style="margin-top:6px;"></p>
+    </div>
+  </div>
+
   <label for="addr">Dirección de entrega *</label>
   <input id="addr" type="text" placeholder="Calle, número, piso, ciudad">
 
@@ -2049,7 +2114,7 @@
     </div>
 
     <div id="deliveryWindowBox" style="display:none; margin-bottom:12px; padding:16px; background:var(--card-hi); border:1px solid var(--line); border-radius:14px;">
-      <div style="font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">🕐 Llegada estimada (tras confirmar)</div>
+      <div id="deliveryWindowLabel" style="font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">🕐 Llegada estimada (tras confirmar)</div>
       <div id="confirmDeliveryWindow" style="font-family:'Space Mono'; font-size:20px; color:var(--cream); font-weight:bold;">--:-- – --:--</div>
     </div>
 
@@ -2855,16 +2920,23 @@ function showNoWhatsappError(){
 let lastOrderNumber = null;
 async function markOrderAsSent(){
   if(!pendingOrder) return;
-  const { orderNumber, orderItems, total, addr, phone, notes, discountCode, discountAmount } = pendingOrder;
+  const { orderNumber, orderItems, total, addr, phone, notes, discountCode, discountAmount, scheduledFor } = pendingOrder;
 
   document.getElementById("noWhatsappBox").style.display = "none";
   document.getElementById("orderNumberBox").style.display = "block";
 
-  const now = new Date();
-  const fmtTime = (d) => d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-  const etaMin = new Date(now.getTime() + DELIVERY_MIN_MINUTES * 60000);
-  const etaMax = new Date(now.getTime() + DELIVERY_MAX_MINUTES * 60000);
-  document.getElementById("confirmDeliveryWindow").textContent = fmtTime(etaMin) + " – " + fmtTime(etaMax);
+  const windowLabel = document.getElementById("deliveryWindowLabel");
+  if (scheduledFor){
+    windowLabel.textContent = "📅 Hora programada";
+    document.getElementById("confirmDeliveryWindow").textContent = scheduledFor;
+  } else {
+    windowLabel.textContent = "🕐 Llegada estimada (tras confirmar)";
+    const now = new Date();
+    const fmtTime = (d) => d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    const etaMin = new Date(now.getTime() + DELIVERY_MIN_MINUTES * 60000);
+    const etaMax = new Date(now.getTime() + DELIVERY_MAX_MINUTES * 60000);
+    document.getElementById("confirmDeliveryWindow").textContent = fmtTime(etaMin) + " – " + fmtTime(etaMax);
+  }
   document.getElementById("deliveryWindowBox").style.display = "block";
   document.getElementById("orderSavedHint").style.display = "block";
 
@@ -2875,6 +2947,7 @@ async function markOrderAsSent(){
     await db.collection("orders").doc(String(orderNumber)).set({
       orderNumber, items: orderItems, total, address: addr, phone, notes, status: "recibido",
       discountCode: discountCode || null, discountAmount: discountAmount || 0,
+      scheduledFor: scheduledFor || null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     // Mirror ONLY the number + status into a separate public collection. This is what customer
@@ -2884,7 +2957,7 @@ async function markOrderAsSent(){
     // today's orders — once the day changes, old order numbers stop being trackable publicly,
     // even though the full order stays in the admin's "orders" history forever.
     await db.collection("orderStatus").doc(String(orderNumber)).set({
-      orderNumber, status: "recibido", dateKey: getLocalDateKey()
+      orderNumber, status: "recibido", dateKey: getLocalDateKey(), scheduledFor: scheduledFor || null
     });
     lastOrderNumber = orderNumber;
     document.getElementById("trackThisOrderBtn").style.display = "block";
@@ -2911,6 +2984,71 @@ function callRestaurant(){
   window.location.href = "tel:+" + digitsOnly;
 }
 
+// --- Scheduled ordering ("ASAP" vs "pick a later time") ---
+let scheduleMode = "asap"; // "asap" | "later"
+let scheduledTime = null;  // "HH:MM" string once the customer picks a slot
+
+function setScheduleMode(mode){
+  scheduleMode = mode;
+  document.getElementById("scheduleBtnAsap").classList.toggle("active", mode === "asap");
+  document.getElementById("scheduleBtnLater").classList.toggle("active", mode === "later");
+  const wrap = document.getElementById("scheduleTimeWrap");
+  if (mode === "later"){
+    wrap.style.display = "block";
+    populateScheduleTimeSlots();
+  } else {
+    wrap.style.display = "none";
+    scheduledTime = null;
+  }
+}
+
+// Builds a dropdown of valid time slots (15-minute steps), starting at least 45 minutes from
+// now (kitchens need real lead time for a scheduled order) and never past closing time if
+// automatic hours are on. Keeps the customer from ever picking an impossible time.
+function populateScheduleTimeSlots(){
+  const select = document.getElementById("scheduleTimeInput");
+  const hint = document.getElementById("scheduleTimeHint");
+  select.innerHTML = "";
+
+  const LEAD_MINUTES = 45;
+  const STEP_MINUTES = 15;
+  const now = new Date();
+  let cursor = new Date(now.getTime() + LEAD_MINUTES * 60000);
+  // round up to the next quarter-hour so slots look clean (12:15, 12:30, not 12:07)
+  cursor.setMinutes(Math.ceil(cursor.getMinutes() / STEP_MINUTES) * STEP_MINUTES, 0, 0);
+
+  let limit = new Date(now.getTime() + 5 * 3600000); // fallback window: next 5 hours
+  if (AUTO_SCHEDULE){
+    const [ch, cm] = CLOSE_TIME.split(':').map(Number);
+    let close = new Date(now);
+    close.setHours(ch, cm, 0, 0);
+    if (close <= now) close.setDate(close.getDate() + 1); // closing time already passed today (crosses midnight)
+    limit = close;
+  }
+
+  const slots = [];
+  while (cursor < limit){
+    slots.push(new Date(cursor));
+    cursor = new Date(cursor.getTime() + STEP_MINUTES * 60000);
+  }
+
+  if (slots.length === 0){
+    select.innerHTML = `<option value="">No hay horarios disponibles hoy</option>`;
+    select.disabled = true;
+    scheduledTime = null;
+    hint.textContent = "Estamos cerca del cierre — elige \"Lo antes posible\" o inténtalo mañana.";
+    return;
+  }
+
+  select.disabled = false;
+  select.innerHTML = slots.map(d => {
+    const label = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    return `<option value="${label}">${label}</option>`;
+  }).join('');
+  scheduledTime = select.value;
+  hint.textContent = "Prepararemos tu pedido para que llegue a esa hora.";
+}
+
 async function sendOrder(){
   pruneInvalidCartItems();
   const addrEl = document.getElementById("addr");
@@ -2932,12 +3070,19 @@ async function sendOrder(){
   }
 
   const notes = notesEl.value.trim();
+
+  if (scheduleMode === "later" && !scheduledTime){
+    showToast("⚠️", "Elige una hora válida o cambia a \"Lo antes posible\".", true);
+    return;
+  }
+
   const entries = Object.entries(cart);
   const {subtotal, discount, total} = cartTotals();
   const discountCode = appliedDiscount ? appliedDiscount.code : null;
   const restName = document.getElementById('mainTitle').innerText.trim();
   const now = new Date();
   const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  const scheduledFor = scheduleMode === "later" ? scheduledTime : null;
 
   const sendBtn = document.getElementById("sendBtn");
   sendBtn.disabled = true;
@@ -2952,7 +3097,8 @@ async function sendOrder(){
     orderNumber = Math.floor(1000 + Math.random() * 9000); // offline fallback
   }
 
-  let msg = `*Pedido #${orderNumber} — ${restName}*\n\n`;
+  let msg = `*Pedido #${orderNumber} — ${restName}*\n`;
+  msg += scheduledFor ? `*📅 PROGRAMADO PARA LAS ${scheduledFor}*\n\n` : `\n`;
 
   const orderItems = [];
   entries.forEach(([id, qty]) => {
@@ -2970,12 +3116,12 @@ async function sendOrder(){
   msg += `Dirección: ${addr}\n`;
   if(phone) msg += `Teléfono: ${phone}\n`;
   if(notes) msg += `Notas: ${notes}\n`;
-  msg += `Hora: ${timeStr}`;
+  msg += scheduledFor ? `Pedido hecho a las: ${timeStr}` : `Hora: ${timeStr}`;
 
   // NOTE: nothing is written to the database yet. The order is only recorded once the
   // customer actually clicks the WhatsApp link below (see markOrderAsSent()). This is what
   // stops "phantom" orders from showing up when someone never had WhatsApp to begin with.
-  pendingOrder = { orderNumber, orderItems, total, addr, phone, notes, discountCode, discountAmount: discount };
+  pendingOrder = { orderNumber, orderItems, total, addr, phone, notes, discountCode, discountAmount: discount, scheduledFor };
 
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   document.getElementById("confirmWaLink").href = url;
@@ -2985,6 +3131,7 @@ async function sendOrder(){
   updateCartBar();
   closeSheet();
   appliedDiscount = null;
+  setScheduleMode("asap");
 
   sendBtn.disabled = false;
   sendBtn.textContent = originalBtnText;
@@ -4042,6 +4189,7 @@ function renderOrdersList(snap, newlyAdded){
         <span class="order-num">#${o.orderNumber ?? '—'}</span>
         <span class="order-time">${when}</span>
       </div>
+      ${o.scheduledFor ? `<div class="order-scheduled-banner">📅 Programado para las ${escapeHtml(o.scheduledFor)}</div>` : ""}
       <div class="order-items">${itemsHtml}</div>
       <div class="order-meta">
         📍 <b>${escapeHtml(o.address) || '—'}</b><br>
