@@ -3394,10 +3394,13 @@ function handleLoadingBgUpload(event){
           if (data && data.success && data.data && data.data.url) {
             IMAGES[LOADING_BG_KEY] = data.data.url;
           } else {
+            const reason = (data && data.error && data.error.message) || 'respuesta inesperada de ImgBB';
             console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+            showToast("⚠️", "No se subió a ImgBB (" + reason + "). Se guardó una copia local mientras tanto.", true);
           }
         } catch(err) {
           console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
+          showToast("⚠️", "No se pudo conectar con ImgBB. Se guardó una copia local mientras tanto.", true);
         }
       }
     };
@@ -4821,10 +4824,13 @@ function handleImgUpload(event, catIdx, itemIdx) {
             IMAGES[key] = data.data.url;
             renderAdminPanel();
           } else {
+            const reason = (data && data.error && data.error.message) || 'respuesta inesperada de ImgBB';
             console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+            showToast("⚠️", "No se subió a ImgBB (" + reason + "). Se guardó una copia local mientras tanto.", true);
           }
         } catch(err) {
           console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
+          showToast("⚠️", "No se pudo conectar con ImgBB. Se guardó una copia local mientras tanto.", true);
         }
       }
     };
