@@ -3247,10 +3247,13 @@ async function sendOrder(){
 
 // --- Admin Panel Logic ---
 // El acceso ya no usa contraseñas escritas en el código: se gestiona con
-// Firebase Authentication (Authentication > Users). El correo que inicia
-// sesión decide el rol: si coincide con DEVELOPER_EMAIL, entra como
-// desarrollador; cualquier otro correo autenticado entra como administrador normal.
-const DEVELOPER_EMAIL = "benzinasaid78@gmail.com";
+// Firebase Authentication (Authentication > Users). El UID (identificador interno,
+// no es información personal como un correo) de la cuenta que inicia sesión decide
+// el rol: si coincide con DEVELOPER_UID, entra como desarrollador; cualquier otra
+// cuenta autenticada entra como administrador normal.
+// Cómo obtener tu UID: Firebase Console → Authentication → Users → columna "User UID"
+// de tu cuenta (cópialo y pégalo abajo, reemplazando el texto de ejemplo).
+const DEVELOPER_UID = "6T5ziLPIpwcuy4YcSWa785MTmbu2";
 let IS_OPEN = true;
 let IS_LOCKED = false;
 let AUTO_SCHEDULE = false;
@@ -5133,9 +5136,9 @@ function closeLogin() {
 
 // Shared by the login form AND by onAuthStateChanged (so a returning admin doesn't
 // have to log in again after a page refresh, since Firebase already remembers them).
-function activateAdminUI(userEmail, opts) {
+function activateAdminUI(user, opts) {
   opts = opts || {};
-  IS_DEVELOPER = (userEmail === DEVELOPER_EMAIL);
+  IS_DEVELOPER = (user.uid === DEVELOPER_UID);
   startOrdersListener();
 
   const adminBtn = document.querySelector(".admin-btn");
@@ -5165,7 +5168,7 @@ function checkAdminPassword() {
 
   firebase.auth().signInWithEmailAndPassword(email, pass)
     .then((userCredential) => {
-      activateAdminUI(userCredential.user.email, { showAlert: true });
+      activateAdminUI(userCredential.user, { showAlert: true });
       closeLogin();
     })
     .catch((error) => {
@@ -5179,7 +5182,7 @@ function checkAdminPassword() {
 // Firebase session (e.g. after a page refresh), without showing the welcome alert again.
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
-    activateAdminUI(user.email, { showAlert: false });
+    activateAdminUI(user, { showAlert: false });
   }
 });
 
