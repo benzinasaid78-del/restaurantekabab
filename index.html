@@ -2295,7 +2295,7 @@ async function requestOrderNotifications(orderNumber) {
 }
 
 let WHATSAPP_NUMBER = "34641821406"; // TEST NUMBER - CHANGE ONLY AT FINAL DEPLOYMENT
-let IMGBB_API_KEY = "a788a2bbbc7beea20efff1303259e807"; // used to host admin-uploaded product photos instead of bloating Firestore; editable from the developer panel
+let IMGBB_API_KEY = ""; // set from the developer panel (Ajustes) and stored in Firestore — never hardcode a real key here, since this file is publicly viewable
 
 // The 15 original menu photos are served as static files (fast, cached, free — no Firestore needed).
 // Any NEW photo an admin uploads later through the panel still gets its own key and is stored/loaded
@@ -3394,10 +3394,13 @@ function handleLoadingBgUpload(event){
           if (data && data.success && data.data && data.data.url) {
             IMAGES[LOADING_BG_KEY] = data.data.url;
           } else {
+            const reason = (data && data.error && data.error.message) || 'respuesta inesperada de ImgBB';
             console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+            showToast("⚠️", "No se subió a ImgBB (" + reason + "). Se guardó una copia local mientras tanto.", true);
           }
         } catch(err) {
           console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
+          showToast("⚠️", "No se pudo conectar con ImgBB. Se guardó una copia local mientras tanto.", true);
         }
       }
     };
@@ -4821,10 +4824,13 @@ function handleImgUpload(event, catIdx, itemIdx) {
             IMAGES[key] = data.data.url;
             renderAdminPanel();
           } else {
+            const reason = (data && data.error && data.error.message) || 'respuesta inesperada de ImgBB';
             console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+            showToast("⚠️", "No se subió a ImgBB (" + reason + "). Se guardó una copia local mientras tanto.", true);
           }
         } catch(err) {
           console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
+          showToast("⚠️", "No se pudo conectar con ImgBB. Se guardó una copia local mientras tanto.", true);
         }
       }
     };
