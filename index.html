@@ -1993,8 +1993,9 @@
         </div>
 
         <div style="border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; background:var(--card-hi);">
-          <label style="margin-top:0; display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg> Alojamiento de fotos</label>
-          <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Las fotos que subas desde el panel se alojan automáticamente a través de un servidor intermedio seguro (rápido), en vez de guardarse directamente en Firestore (lento). Si el servidor no responde, se guardan en Firestore como respaldo automático.</p>
+          <label style="margin-top:0; display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg> Clave API de ImgBB (para fotos rápidas)</label>
+          <input type="text" id="set-imgbb-key" value="" placeholder="Pega aquí tu clave de api.imgbb.com">
+          <p style="font-size:11px; color:var(--muted); margin-top:6px; margin-bottom:0;">* Las fotos que subas desde el panel se guardan en ImgBB (rápido) en vez de en Firestore (lento). Si se deja vacío, se guardan en Firestore como antes.</p>
         </div>
 
         <div style="border:1px solid #ff0055; border-radius:12px; padding:16px; background:rgba(255,0,85,0.06); margin-bottom:16px;">
@@ -2294,7 +2295,7 @@ async function requestOrderNotifications(orderNumber) {
 }
 
 let WHATSAPP_NUMBER = "34641821406"; // TEST NUMBER - CHANGE ONLY AT FINAL DEPLOYMENT
-const IMGBB_WORKER_URL = "https://imagbb.benzinasaid78.workers.dev/"; // secure proxy — the real ImgBB key lives only on Cloudflare, never in this file
+let IMGBB_API_KEY = "a788a2bbbc7beea20efff1303259e807"; // used to host admin-uploaded product photos instead of bloating Firestore; editable from the developer panel
 
 // The 15 original menu photos are served as static files (fast, cached, free — no Firestore needed).
 // Any NEW photo an admin uploads later through the panel still gets its own key and is stored/loaded
@@ -2478,7 +2479,7 @@ async function loadFromFirestore(){
       if(s.WHATSAPP_NUMBER) WHATSAPP_NUMBER = s.WHATSAPP_NUMBER;
       if(typeof s.RESTAURANT_LOGO === "string") RESTAURANT_LOGO = s.RESTAURANT_LOGO;
       if(typeof s.RESTAURANT_EYEBROW === "string") RESTAURANT_EYEBROW = s.RESTAURANT_EYEBROW;
-      // (IMGBB_API_KEY no longer stored/loaded — image uploads now go through the secure Worker proxy)
+      if(typeof s.IMGBB_API_KEY === "string") IMGBB_API_KEY = s.IMGBB_API_KEY;
       if(typeof s.ALERT_SOUND_ID === "string" && ALERT_SOUNDS.find(x=>x.id===s.ALERT_SOUND_ID)) ALERT_SOUND_ID = s.ALERT_SOUND_ID;
       if(typeof s.ALERT_VOLUME === "number") ALERT_VOLUME = Math.min(10, Math.max(1, s.ALERT_VOLUME));
       updateLogoDisplay();
@@ -2556,6 +2557,7 @@ async function saveToFirestore(){
     WHATSAPP_NUMBER,
     RESTAURANT_LOGO,
     RESTAURANT_EYEBROW,
+    IMGBB_API_KEY,
     ALERT_SOUND_ID,
     ALERT_VOLUME,
     RESTAURANT_NAME: document.getElementById('mainTitle').innerText,
@@ -3378,23 +3380,25 @@ function handleLoadingBgUpload(event){
       updateLoadingBgPreview();
       applyLoadingBgImage(compressed);
 
-      // Host it via the secure Worker proxy instead of bloating Firestore with a big base64 string.
-      try {
-        const base64Data = compressed.split(',')[1];
-        const formData = new FormData();
-        formData.append('image', base64Data);
-        const res = await fetch(IMGBB_WORKER_URL, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data && data.success && data.data && data.data.url) {
-          IMAGES[LOADING_BG_KEY] = data.data.url;
-        } else {
-          console.warn('Subida a través del proxy falló, se mantiene la copia local:', data);
+      // Host it on ImgBB instead of bloating Firestore with a big base64 string, same as product photos.
+      if (IMGBB_API_KEY) {
+        try {
+          const base64Data = compressed.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data && data.success && data.data && data.data.url) {
+            IMAGES[LOADING_BG_KEY] = data.data.url;
+          } else {
+            console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+          }
+        } catch(err) {
+          console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
         }
-      } catch(err) {
-        console.warn('Error subiendo la imagen, se mantiene la copia local:', err);
       }
     };
     img.src = e.target.result;
@@ -4571,6 +4575,7 @@ function loadSettings() {
   renderDiscountCodesEditor();
   toggleAutoScheduleUI();
   document.getElementById('set-eyebrow-text').value = RESTAURANT_EYEBROW;
+  document.getElementById('set-imgbb-key').value = IMGBB_API_KEY;
   document.getElementById('set-fb-url').value = document.querySelector('.ic-facebook').href;
   document.getElementById('set-ig-url').value = document.querySelector('.ic-instagram').href;
   document.getElementById('set-tt-url').value = document.querySelector('.ic-tiktok').href;
@@ -4799,26 +4804,28 @@ function handleImgUpload(event, catIdx, itemIdx) {
       menuData[catIdx].items[itemIdx].imgKey = key;
       renderAdminPanel();
 
-      // Host the photo through the secure Worker proxy so it loads fast for every visitor
-      // (instead of storing the full photo in Firestore, which is slow). If this fails for any
-      // reason (offline, proxy down), the local compressed copy from above just stays as-is.
-      try {
-        const base64Data = compressed.split(',')[1];
-        const formData = new FormData();
-        formData.append('image', base64Data);
-        const res = await fetch(IMGBB_WORKER_URL, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data && data.success && data.data && data.data.url) {
-          IMAGES[key] = data.data.url;
-          renderAdminPanel();
-        } else {
-          console.warn('Subida a través del proxy falló, se mantiene la copia local:', data);
+      // Host the photo on ImgBB so it loads fast for every visitor (instead of storing the
+      // full photo in Firestore, which is slow). If this fails for any reason (no key set,
+      // offline, ImgBB down), the local compressed copy from above just stays as-is — nothing breaks.
+      if (IMGBB_API_KEY) {
+        try {
+          const base64Data = compressed.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data && data.success && data.data && data.data.url) {
+            IMAGES[key] = data.data.url;
+            renderAdminPanel();
+          } else {
+            console.warn('Subida a ImgBB falló, se mantiene la copia local:', data);
+          }
+        } catch(err) {
+          console.warn('Error subiendo a ImgBB, se mantiene la copia local:', err);
         }
-      } catch(err) {
-        console.warn('Error subiendo la imagen, se mantiene la copia local:', err);
       }
     };
     img.src = e.target.result;
@@ -5064,6 +5071,7 @@ async function saveAndDownload() {
   DELIVERY_MAX_MINUTES = parseInt(document.getElementById('set-delivery-max').value) || 45;
   MIN_ORDER_AMOUNT = parseFloat(document.getElementById('set-min-order').value) || 0;
   RESTAURANT_EYEBROW = document.getElementById('set-eyebrow-text').value;
+  IMGBB_API_KEY = document.getElementById('set-imgbb-key').value;
   document.querySelector('.ic-facebook').href = document.getElementById('set-fb-url').value;
   document.querySelector('.ic-instagram').href = document.getElementById('set-ig-url').value;
   document.querySelector('.ic-tiktok').href = document.getElementById('set-tt-url').value;
