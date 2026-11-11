@@ -4694,7 +4694,7 @@ document.getElementById("adminPassInput")?.addEventListener("keyup",function(e){
 // ---- PWA: instalar el panel como app ----
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("admin-sw.js").catch(function (err) {
+    navigator.serviceWorker.register("admin-sw.js", { scope: "./admin.html" }).catch(function (err) {
       console.warn("No se pudo registrar el service worker del admin:", err);
     });
   });
