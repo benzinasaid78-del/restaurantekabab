@@ -2167,7 +2167,7 @@
     hr{ border:none; border-top:1px dashed #000; margin:6px 0; }
   }
 </style>
-</head>
+<link rel="manifest" href="admin-manifest.json">
 </head>
 <body>
 
@@ -4688,6 +4688,34 @@ firebase.auth().onAuthStateChanged((user)=>{
 });
 document.getElementById("adminPassInput")?.addEventListener("keyup",function(e){ if(e.key==="Enter") checkAdminPassword(); });
 
+</script>
+<button id="installAdminBtn" type="button" style="display:none;position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;background:#F0453B;color:#fff;border:0;border-radius:999px;padding:12px 22px;font:600 14px Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.45);cursor:pointer">📲 Instalar app Admin</button>
+<script>
+// ---- PWA: instalar el panel como app ----
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("admin-sw.js").catch(function (err) {
+      console.warn("No se pudo registrar el service worker del admin:", err);
+    });
+  });
+}
+(function () {
+  var deferred = null;
+  var btn = document.getElementById("installAdminBtn");
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferred = e;
+    btn.style.display = "block";
+  });
+  btn.addEventListener("click", async function () {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null;
+    btn.style.display = "none";
+  });
+  window.addEventListener("appinstalled", function () { btn.style.display = "none"; });
+})();
 </script>
 </body>
 </html>
