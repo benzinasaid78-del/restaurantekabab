@@ -907,6 +907,8 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   .order-card .order-total{color:var(--gold); font-weight:bold; font-size:15px;}
+  .order-price-alert{ margin:8px 0; padding:9px 11px; border-radius:10px; background:rgba(240,69,59,.14); border:1px solid rgba(240,69,59,.55); color:#ffb4ae; font-size:12px; line-height:1.5; }
+  .order-price-ok{ margin:6px 0; font-size:11px; color:#6fcf97; opacity:.85; }
   .order-discount-badge{
     font-size:11px;
     color:var(--gold);
@@ -3785,6 +3787,47 @@ function printOrder(orderId){
   window.print();
 }
 
+// ---- Verificación de precios: recalcula cada pedido con el menú actual y avisa si no coincide ----
+function verifyOrderPrices(o){
+  try{
+    const items = Array.isArray(o.items) ? o.items : [];
+    const names = Object.keys(registry);
+    if(names.length === 0 || items.length === 0) return null; // menú aún sin cargar
+    const priceByName = {};
+    names.forEach(k => { const r = registry[k]; if(r && typeof r.name === "string") priceByName[r.name] = Number(r.price); });
+    const issues = [];
+    let menuSubtotal = 0, allKnown = true;
+    items.forEach(it => {
+      const qty = Number(it.qty), paid = Number(it.price), name = String(it.name || "?");
+      if(!Number.isInteger(qty) || qty < 1 || qty > 99){ issues.push(name + ": cantidad rara (" + it.qty + ")"); allKnown = false; return; }
+      if(!(name in priceByName)){ issues.push(name + ": ya no existe en el menú"); allKnown = false; return; }
+      const menuPrice = priceByName[name];
+      menuSubtotal += menuPrice * qty;
+      if(!isFinite(paid) || Math.abs(paid - menuPrice) > 0.005)
+        issues.push(name + ": pedido a " + fmt(paid) + " · menú " + fmt(menuPrice));
+    });
+    let expectedDiscount = 0;
+    const dAmt = Number(o.discountAmount || 0);
+    if(o.discountCode){
+      const dc = DISCOUNT_CODES.find(c => String(c.code).toUpperCase() === String(o.discountCode).toUpperCase());
+      if(!dc){ issues.push("Código " + o.discountCode + ": no existe"); }
+      else {
+        if(dc.active === false) issues.push("Código " + o.discountCode + ": está desactivado");
+        expectedDiscount = Math.min(Number(dc.amount) || 0, menuSubtotal);
+        if(Math.abs(dAmt - expectedDiscount) > 0.005)
+          issues.push("Descuento: pedido -" + fmt(dAmt) + " · correcto -" + fmt(expectedDiscount));
+      }
+    } else if(dAmt > 0){
+      issues.push("Descuento de " + fmt(dAmt) + " sin código");
+    }
+    const expectedTotal = Math.max(0, menuSubtotal - expectedDiscount);
+    const total = Number(o.total);
+    if(allKnown && (!isFinite(total) || Math.abs(total - expectedTotal) > 0.01))
+      issues.push("Total: pedido " + fmt(total) + " · correcto " + fmt(expectedTotal));
+    return { ok: issues.length === 0, issues, expectedTotal: allKnown ? expectedTotal : null };
+  }catch(e){ console.warn("verifyOrderPrices:", e); return null; }
+}
+
 function renderOrdersList(snap, newlyAdded){
   newlyAdded = newlyAdded || [];
   const box = document.getElementById('ordersListContent');
@@ -3807,6 +3850,11 @@ function renderOrdersList(snap, newlyAdded){
       ? o.createdAt.toDate().toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})
       : '—';
     const itemsHtml = (Array.isArray(o.items) ? o.items : []).map(it => `${escapeHtml(it.qty)}x ${escapeHtml(it.name)}`).join('<br>');
+    const pv = verifyOrderPrices(o);
+    const pvHtml = !pv ? '' : (pv.ok
+      ? '<div class="order-price-ok">✓ Precio verificado con el menú</div>'
+      : '<div class="order-price-alert"><b>⚠️ El precio no coincide con el menú</b><br>' + pv.issues.map(escapeHtml).join('<br>') + (pv.expectedTotal !== null ? '<br><b>Total correcto: ' + fmt(pv.expectedTotal) + '</b>' : '') + '<br><span style="opacity:.8">Si cambiaste precios después del pedido, puede ser un falso aviso.</span></div>');
+    const flagged = !!(pv && !pv.ok);
     const card = document.createElement('div');
     const isNew = newlyAdded.includes(id);
     card.className = 'order-card' + (isFinal ? ' done' : '') + (isNew ? ' just-added' : '');
@@ -3817,6 +3865,7 @@ function renderOrdersList(snap, newlyAdded){
       </div>
       ${o.scheduledFor ? `<div class="order-scheduled-banner"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Programado para las ${escapeHtml(o.scheduledFor)}</div>` : ""}
       <div class="order-items">${itemsHtml}</div>
+      ${pvHtml}
       <div class="order-meta">
         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> <b>${escapeHtml(o.address) || '—'}</b><br>
         ${o.phone ? `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 2 .7 3a2 2 0 0 1-.4 2.1L8 10.3a16 16 0 0 0 6 6l1.5-1.4a2 2 0 0 1 2-.4c1 .3 2 .5 3 .7a2 2 0 0 1 1.7 2Z"/></svg> <b>${escapeHtml(o.phone)}</b><br>` : ""}
@@ -3825,7 +3874,7 @@ function renderOrdersList(snap, newlyAdded){
       ${renderStatusPipeline(status)}
       <div class="order-status-actions">
         <button class="btn-small" onclick="printOrder('${safeOrderId(id)}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir</button>
-        ${!isFinal && nextStatus ? `<button class="btn-small" onclick="advanceOrderStatus('${safeOrderId(id)}','${nextStatus.key}')">${nextStatus.icon} Marcar: ${nextStatus.label}</button>` : ''}
+        ${!isFinal && nextStatus ? `<button class="btn-small" onclick="${flagged ? `if(!confirm('⚠️ Este pedido tiene el precio alterado. ¿Continuar igualmente?'))return;` : ''}advanceOrderStatus('${safeOrderId(id)}','${nextStatus.key}')">${nextStatus.icon} Marcar: ${nextStatus.label}</button>` : ''}
         ${!isFinal ? `<button class="btn-small btn-danger" onclick="cancelOrder('${safeOrderId(id)}')">Cancelar</button>` : ''}
       </div>
       <div class="order-bottom">
