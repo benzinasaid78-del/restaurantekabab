@@ -1,0 +1,31 @@
+{
+  "name": "Barbastro Food",
+  "short_name": "Barbastro Food",
+  "description": "Döner, dürum, kebab y hamburguesas a domicilio. Pide directo, sin registro.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0B0D",
+  "theme_color": "#F0453B",
+  "icons": [
+    {
+      "src": "lahori-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "lahori-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "lahori-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
